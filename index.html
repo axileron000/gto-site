@@ -67,6 +67,9 @@
 
         .participant-list-item { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; padding: 15px; cursor: pointer; transition: 0.2s; }
         .participant-list-item:hover { background: var(--table-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .gender-box { background: rgba(0,0,0,0.02); border-radius: 8px; padding: 10px; height: 100%; border: 1px solid var(--border-color); }
+        [data-theme="dark"] .gender-box, [data-theme="neon"] .gender-box { background: rgba(255,255,255,0.02); }
     </style>
 </head>
 <body data-theme="light">
@@ -131,7 +134,7 @@
                 <h6 class="form-label mt-4 mb-3 text-primary border-bottom pb-2">ШАГ 1. Выберите возрастные ступени:</h6>
                 <div class="row mb-4 g-3" id="stagesContainer"></div>
 
-                <h6 class="form-label mt-4 mb-3 text-primary border-bottom pb-2">ШАГ 2. Настройте дисциплины для каждой выбранной ступени:</h6>
+                <h6 class="form-label mt-4 mb-3 text-primary border-bottom pb-2">ШАГ 2. Настройте дисциплины (отдельно для мужчин и женщин):</h6>
                 <div class="row mb-4 p-3 rounded border" id="exercisesContainer" style="background: var(--panel-bg);">
                     <div class="text-muted"><i class="bi bi-info-circle"></i> Сначала выберите ступени выше, чтобы появились упражнения...</div>
                 </div>
@@ -299,7 +302,7 @@
     // --- БАЗА И ГЛОБАЛЬНОЕ СОСТОЯНИЕ (LOCAL STORAGE) ---
     let gtoData = []; 
     let appState = { 
-        festivals: [], // [{ id, name, date, stages, exercises(Object) }]
+        festivals: [], // [{ id, name, date, stages, exercises(Object M/F) }]
         teams: [],     
         participants: [], 
         results: [],   
@@ -318,12 +321,12 @@
     let currentSelectedTeamId = null;
     let currentModalParticipantId = null;
     let MOCK_STAGES = [];
-    let EXERCISES_MAP = {};
+    let EXERCISES_MAP = {}; // { "Stage": { "M": [...], "F": [...] } }
 
     window.onload = async function() {
         loadState(); 
-        
         const badge = document.getElementById('dbStatusBadge');
+        
         try {
             const response = await fetch('gto_database_clean.json');
             gtoData = await response.json();
@@ -333,20 +336,32 @@
             gtoData.forEach(row => {
                 const stage = row['Ступень'];
                 const exercise = row['Упражнение'];
-                if (!stage || !exercise) return;
+                const genderRaw = row['Пол'];
+                
+                if (!stage || !exercise || !genderRaw) return;
                 stagesSet.add(stage);
-                if (!EXERCISES_MAP[stage]) EXERCISES_MAP[stage] = new Set();
-                EXERCISES_MAP[stage].add(exercise);
+                
+                if (!EXERCISES_MAP[stage]) EXERCISES_MAP[stage] = { M: new Set(), F: new Set() };
+                
+                // Группируем пол: Мальчики/Мужчины/Юноши -> M, остальное -> F
+                const isMale = genderRaw.toLowerCase().startsWith('м') || genderRaw.toLowerCase().startsWith('ю');
+                const gKey = isMale ? 'M' : 'F';
+                EXERCISES_MAP[stage][gKey].add(exercise);
             });
 
             MOCK_STAGES = Array.from(stagesSet).sort(); 
-            for (let stage in EXERCISES_MAP) { EXERCISES_MAP[stage] = Array.from(EXERCISES_MAP[stage]).sort(); }
+            for (let stage in EXERCISES_MAP) { 
+                EXERCISES_MAP[stage].M = Array.from(EXERCISES_MAP[stage].M).sort(); 
+                EXERCISES_MAP[stage].F = Array.from(EXERCISES_MAP[stage].F).sort(); 
+            }
         } catch (e) {
             badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning"></i> Демо-режим (JSON не найден)`;
-            MOCK_STAGES = ["II СТУПЕНЬ (возрастная группа от 8 до 9 лет)", "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)"];
+            MOCK_STAGES = ["II СТУПЕНЬ (возрастная группа от 8 до 9 лет)"];
             EXERCISES_MAP = {
-                "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)": ["Бег на 30 м (с)", "Прыжок в длину (см)"],
-                "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)": ["Бег на 60 м (с)", "Подтягивания (раз)"]
+                "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)": {
+                    M: ["Бег на 30 м (с)", "Прыжок в длину (см)"],
+                    F: ["Бег на 30 м (с)", "Наклон вперед (см)"]
+                }
             };
         }
         
@@ -384,6 +399,10 @@
         return stageStr.split('(')[0].trim();
     }
 
+    function getGenderKey(genderStr) {
+        return genderStr.toLowerCase().startsWith('м') || genderStr.toLowerCase().startsWith('ю') ? 'M' : 'F';
+    }
+
     // --- МЕНЕДЖЕР ФЕСТИВАЛЕЙ ---
     function renderFestivalsList() {
         const area = document.getElementById('savedFestivalsArea');
@@ -404,8 +423,6 @@
             const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
             const fTeams = appState.teams.filter(t => t.festivalId === f.id).length;
             const fParts = appState.participants.filter(p => p.festivalId === f.id).length;
-            
-            // Красивый вывод выбранных ступеней
             const stagesShort = f.stages.map(getShortStageName).join(', ');
 
             list.innerHTML += `
@@ -460,7 +477,10 @@
         
         // Сбор всех уникальных упражнений фестиваля для общего селектора в рейтинге
         let allUniqueExs = new Set();
-        Object.values(activeFest.exercises).forEach(arr => arr.forEach(ex => allUniqueExs.add(ex)));
+        Object.values(activeFest.exercises).forEach(stageObj => {
+            (stageObj.M || []).forEach(ex => allUniqueExs.add(ex));
+            (stageObj.F || []).forEach(ex => allUniqueExs.add(ex));
+        });
         
         const rSelect = document.getElementById('ratingExerciseSelect');
         rSelect.innerHTML = Array.from(allUniqueExs).sort().map(e => `<option value="${e}">${e}</option>`).join('');
@@ -469,7 +489,6 @@
         currentSelectedTeamId = null;
         document.getElementById('participantsArea').style.display = 'none';
         
-        // Сбрасываем форму участника
         document.getElementById('partDob').value = '';
         document.getElementById('partStageAuto').value = '';
         document.getElementById('partStageAuto').classList.remove('is-valid', 'is-invalid');
@@ -509,18 +528,34 @@
         }
         
         selectedStages.forEach((st, stIdx) => {
-            let exHtml = `<div class="col-12 mt-3"><h6 class="text-primary fw-bold border-bottom pb-1 mb-3"><i class="bi bi-list-check"></i> ${getShortStageName(st)}</h6><div class="row g-2">`;
-            const exs = EXERCISES_MAP[st] || [];
-            exs.forEach((ex, idx) => {
-                const safeId = `ex_${stIdx}_${idx}`;
+            let exHtml = `<div class="col-12 mt-4"><h5 class="text-primary fw-bold border-bottom pb-2 mb-3"><i class="bi bi-card-list"></i> ${getShortStageName(st)}</h5><div class="row g-3">`;
+            
+            // МУЖСКОЙ ЗАЧЕТ
+            exHtml += `<div class="col-md-6"><div class="gender-box"><strong class="text-primary"><i class="bi bi-gender-male"></i> Мужской зачет</strong><div class="mt-2">`;
+            const exsM = EXERCISES_MAP[st]?.M || [];
+            exsM.forEach((ex, idx) => {
+                const safeId = `ex_M_${stIdx}_${idx}`;
                 exHtml += `
-                <div class="col-md-6">
-                    <div class="form-check">
-                        <input class="form-check-input ex-cb" type="checkbox" data-stage="${st}" value="${ex}" id="${safeId}" checked>
-                        <label class="form-check-label" style="font-size:0.9em;" for="${safeId}">${ex}</label>
-                    </div>
+                <div class="form-check">
+                    <input class="form-check-input ex-cb" type="checkbox" data-stage="${st}" data-gender="M" value="${ex}" id="${safeId}" checked>
+                    <label class="form-check-label text-muted" style="font-size:0.85em;" for="${safeId}">${ex}</label>
                 </div>`;
             });
+            exHtml += `</div></div></div>`;
+            
+            // ЖЕНСКИЙ ЗАЧЕТ
+            exHtml += `<div class="col-md-6"><div class="gender-box"><strong class="text-danger"><i class="bi bi-gender-female"></i> Женский зачет</strong><div class="mt-2">`;
+            const exsF = EXERCISES_MAP[st]?.F || [];
+            exsF.forEach((ex, idx) => {
+                const safeId = `ex_F_${stIdx}_${idx}`;
+                exHtml += `
+                <div class="form-check">
+                    <input class="form-check-input ex-cb" type="checkbox" data-stage="${st}" data-gender="F" value="${ex}" id="${safeId}" checked>
+                    <label class="form-check-label text-muted" style="font-size:0.85em;" for="${safeId}">${ex}</label>
+                </div>`;
+            });
+            exHtml += `</div></div></div>`;
+            
             exHtml += `</div></div>`;
             container.innerHTML += exHtml;
         });
@@ -531,12 +566,12 @@
         const stages = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
         if(stages.length === 0) return showToast("Ошибка: Выберите хотя бы одну возрастную ступень!", "error");
 
-        // Сохраняем упражнения строго по ступеням
         const exercisesMap = {};
-        stages.forEach(st => exercisesMap[st] = []);
+        stages.forEach(st => exercisesMap[st] = { M: [], F: [] });
         document.querySelectorAll('.ex-cb:checked').forEach(cb => {
             const st = cb.getAttribute('data-stage');
-            if(exercisesMap[st]) exercisesMap[st].push(cb.value);
+            const g = cb.getAttribute('data-gender'); // 'M' или 'F'
+            if(exercisesMap[st]) exercisesMap[st][g].push(cb.value);
         });
 
         const newFest = {
@@ -615,7 +650,7 @@
         renderParticipants();
     }
 
-    // --- УЧАСТНИКИ И ОПРЕДЕЛЕНИЕ СТУПЕНИ ПО ДАТЕ РОЖДЕНИЯ ---
+    // --- УЧАСТНИКИ ---
     document.getElementById('partDob').addEventListener('change', function(e) {
         const dob = this.value;
         const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
@@ -630,7 +665,6 @@
         const age = calculateAge(dob, activeFest.date);
         let matchedStage = "";
         
-        // Ищем подходящую ступень среди тех, что выбраны в ЭТОМ фестивале
         for(let st of activeFest.stages) {
             const range = getStageAgeRange(st);
             if(age >= range.min && age <= range.max) {
@@ -645,7 +679,7 @@
             stageInput.classList.remove('is-invalid');
             stageInput.classList.add('is-valid');
         } else {
-            stageInput.value = `Блок: Возраст ${age} лет не подходит!`;
+            stageInput.value = `Возраст ${age} лет не подходит!`;
             stageInput.setAttribute('data-full-stage', '');
             stageInput.classList.add('is-invalid');
             stageInput.classList.remove('is-valid');
@@ -665,7 +699,7 @@
         const fullStage = stageInput.getAttribute('data-full-stage');
 
         if (!fullStage) {
-            return showToast("Невозможно добавить участника: его возраст не подходит под ступени фестиваля!", "error");
+            return showToast("ОШИБКА: Возраст участника не попадает ни в одну из ступеней, разрешенных на этом фестивале.", "error");
         }
 
         const age = calculateAge(dob, activeFest.date);
@@ -683,7 +717,7 @@
         
         renderParticipants();
         renderResultList(); 
-        showToast(`Участник ${name} (${age} лет) зачислен в ${getShortStageName(fullStage)}!`, "success");
+        showToast(`Участник ${name} зачислен в ${getShortStageName(fullStage)}!`, "success");
     });
 
     function deleteParticipant(pId) {
@@ -705,7 +739,7 @@
             return;
         }
         teamParts.forEach(p => {
-            const isMale = p.gender.toLowerCase().startsWith('м');
+            const isMale = getGenderKey(p.gender) === 'M';
             let icon = isMale ? '<i class="bi bi-gender-male text-primary"></i>' : '<i class="bi bi-gender-female text-danger"></i>';
             tbody.innerHTML += `<tr>
                 <td class="fw-bold">${p.name}</td><td>${p.age} лет</td><td>${icon} ${p.gender}</td><td><span class="badge bg-secondary">${getShortStageName(p.stage)}</span></td>
@@ -724,7 +758,6 @@
         
         if(!appState.activeFestivalId) return;
         const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
-        
         let filteredParts = appState.participants.filter(p => p.festivalId === appState.activeFestivalId);
         
         if(searchTerm) {
@@ -742,9 +775,10 @@
         
         filteredParts.forEach(p => {
             const team = appState.teams.find(t => t.id === p.teamId);
+            const gKey = getGenderKey(p.gender);
             
-            // Берем только те упражнения, которые были ВЫБРАНЫ ДЛЯ ЕГО СТУПЕНИ при создании фестиваля
-            const validExs = activeFest.exercises[p.stage] || [];
+            // Берем упражнения ТОЛЬКО для его ступени И его пола
+            const validExs = activeFest.exercises[p.stage]?.[gKey] || [];
             const totalExs = validExs.length;
             const enteredCount = appState.results.filter(r => r.partId === p.id).length;
             
@@ -775,11 +809,12 @@
         
         document.getElementById('modalPartName').innerText = part.name;
         
-        const validExs = activeFest.exercises[part.stage] || [];
+        const gKey = getGenderKey(part.gender);
+        const validExs = activeFest.exercises[part.stage]?.[gKey] || [];
         
         let html = '';
         if(validExs.length === 0) {
-            html = '<div class="alert alert-warning">Для этой ступени в данном фестивале не выбрано ни одного испытания.</div>';
+            html = '<div class="alert alert-warning">Для пола и ступени этого участника не выбрано ни одного испытания на фестивале.</div>';
         } else {
             validExs.forEach((ex, idx) => {
                 const existing = appState.results.find(r => r.partId === pId && r.exercise === ex);
@@ -908,7 +943,7 @@
         });
     }
 
-    // ЭКСПОРТ В EXCEL (ДВЕ ВКЛАДКИ)
+    // ЭКСПОРТ В EXCEL
     document.getElementById('btnExportExcel').addEventListener('click', function() {
         const activeFestResults = appState.results.filter(r => r.festivalId === appState.activeFestivalId);
         
@@ -936,7 +971,7 @@
 
             // === ВКЛАДКА 2: КОМАНДНЫЙ ЗАЧЕТ ===
             let exportDataTeam = [
-                ["Место", "Название команды", "Сумма Баллов"]
+                ["Место", "Название команды", "Сумма Баллов ГТО"]
             ];
 
             const activeTeams = appState.teams.filter(t => t.festivalId === appState.activeFestivalId);
