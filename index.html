@@ -167,9 +167,13 @@
                                 <label class="form-label small mb-1">ФИО</label>
                                 <input type="text" class="form-control form-control-sm" id="partName" placeholder="Иванов И.И." required>
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label small mb-1">Ожидаемая Ступень</label>
+                                <select class="form-select form-select-sm border-primary" id="partStage" required></select>
+                            </div>
                             <div class="col-md-2">
                                 <label class="form-label small mb-1">Дата рожд.</label>
-                                <input type="date" class="form-control form-control-sm" id="partDob" required title="Дата рождения нужна для точного расчета ступени">
+                                <input type="date" class="form-control form-control-sm" id="partDob" required>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small mb-1">Пол</label>
@@ -177,10 +181,6 @@
                                     <option value="Мальчики">Мужской</option>
                                     <option value="Девочки">Женский</option>
                                 </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small mb-1">Ступень (Автоматически)</label>
-                                <input type="text" class="form-control form-control-sm text-primary fw-bold" id="partStageAuto" readonly placeholder="Укажите дату рождения...">
                             </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-success btn-sm w-100 py-2 fw-bold" title="Добавить участника"><i class="bi bi-person-plus"></i></button>
@@ -225,7 +225,7 @@
                 </button>
             </div>
             <div class="row g-4">
-                <div class="col-lg-6">
+                <div class="col-lg-5">
                     <div class="p-4 rounded h-100 border">
                         <h5 class="text-center mb-3">🏆 Командный зачет (Превью)</h5>
                         <div class="table-responsive">
@@ -236,13 +236,20 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-7">
                     <div class="p-4 rounded h-100 border">
                         <h5 class="text-center mb-3">🏅 Личный зачет по видам (Превью)</h5>
                         <select class="form-select mb-4" id="ratingExerciseSelect"></select>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
-                                <thead><tr><th width="15%">Место</th><th>Участник</th><th width="25%" class="text-end">Баллы</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th width="10%">Место</th>
+                                        <th>Участник</th>
+                                        <th class="text-center">Рез-т</th>
+                                        <th width="20%" class="text-end">Баллы</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="leaderboardExercise"></tbody>
                             </table>
                         </div>
@@ -342,8 +349,6 @@
                 stagesSet.add(stage);
                 
                 if (!EXERCISES_MAP[stage]) EXERCISES_MAP[stage] = { M: new Set(), F: new Set() };
-                
-                // Группируем пол: Мальчики/Мужчины/Юноши -> M, остальное -> F
                 const isMale = genderRaw.toLowerCase().startsWith('м') || genderRaw.toLowerCase().startsWith('ю');
                 const gKey = isMale ? 'M' : 'F';
                 EXERCISES_MAP[stage][gKey].add(exercise);
@@ -373,7 +378,7 @@
         }
     };
 
-    // --- ФУНКЦИИ ВОЗРАСТА ---
+    // --- ФУНКЦИИ ВОЗРАСТА И ПОЛА ---
     function calculateAge(dobStr, festivalDateStr) {
         if (!dobStr || !festivalDateStr) return 0;
         const dob = new Date(dobStr);
@@ -475,23 +480,22 @@
 
         ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
         
+        // Заполняем селектор ступеней для добавления участников
+        document.getElementById('partStage').innerHTML = activeFest.stages.map(s => `<option value="${s}">${getShortStageName(s)}</option>`).join('');
+        
         // Сбор всех уникальных упражнений фестиваля для общего селектора в рейтинге
         let allUniqueExs = new Set();
         Object.values(activeFest.exercises).forEach(stageObj => {
             (stageObj.M || []).forEach(ex => allUniqueExs.add(ex));
             (stageObj.F || []).forEach(ex => allUniqueExs.add(ex));
         });
-        
         const rSelect = document.getElementById('ratingExerciseSelect');
         rSelect.innerHTML = Array.from(allUniqueExs).sort().map(e => `<option value="${e}">${e}</option>`).join('');
         rSelect.addEventListener('change', renderExerciseRating);
 
         currentSelectedTeamId = null;
         document.getElementById('participantsArea').style.display = 'none';
-        
         document.getElementById('partDob').value = '';
-        document.getElementById('partStageAuto').value = '';
-        document.getElementById('partStageAuto').classList.remove('is-valid', 'is-invalid');
         
         renderTeams();
         renderResultList();
@@ -570,7 +574,7 @@
         stages.forEach(st => exercisesMap[st] = { M: [], F: [] });
         document.querySelectorAll('.ex-cb:checked').forEach(cb => {
             const st = cb.getAttribute('data-stage');
-            const g = cb.getAttribute('data-gender'); // 'M' или 'F'
+            const g = cb.getAttribute('data-gender'); 
             if(exercisesMap[st]) exercisesMap[st][g].push(cb.value);
         });
 
@@ -651,41 +655,6 @@
     }
 
     // --- УЧАСТНИКИ ---
-    document.getElementById('partDob').addEventListener('change', function(e) {
-        const dob = this.value;
-        const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
-        const stageInput = document.getElementById('partStageAuto');
-        
-        if(!dob || !activeFest) {
-            stageInput.value = '';
-            stageInput.classList.remove('is-valid', 'is-invalid');
-            return;
-        }
-        
-        const age = calculateAge(dob, activeFest.date);
-        let matchedStage = "";
-        
-        for(let st of activeFest.stages) {
-            const range = getStageAgeRange(st);
-            if(age >= range.min && age <= range.max) {
-                matchedStage = st;
-                break;
-            }
-        }
-        
-        if(matchedStage) {
-            stageInput.value = getShortStageName(matchedStage);
-            stageInput.setAttribute('data-full-stage', matchedStage);
-            stageInput.classList.remove('is-invalid');
-            stageInput.classList.add('is-valid');
-        } else {
-            stageInput.value = `Возраст ${age} лет не подходит!`;
-            stageInput.setAttribute('data-full-stage', '');
-            stageInput.classList.add('is-invalid');
-            stageInput.classList.remove('is-valid');
-        }
-    });
-
     document.getElementById('formParticipant').addEventListener('submit', (e) => {
         e.preventDefault();
         if(!currentSelectedTeamId || !appState.activeFestivalId) return;
@@ -695,29 +664,29 @@
         const dob = document.getElementById('partDob').value;
         const gender = document.getElementById('partGender').value;
         
-        const stageInput = document.getElementById('partStageAuto');
-        const fullStage = stageInput.getAttribute('data-full-stage');
+        // Берем ступень, которую выбрал судья из селектора (значение Value там - полная строка)
+        const selectedStageFull = document.getElementById('partStage').value;
 
-        if (!fullStage) {
-            return showToast("ОШИБКА: Возраст участника не попадает ни в одну из ступеней, разрешенных на этом фестивале.", "error");
-        }
-
+        // Считаем возраст и проверяем, подходит ли он
         const age = calculateAge(dob, activeFest.date);
+        const stageRange = getStageAgeRange(selectedStageFull);
+
+        if (age < stageRange.min || age > stageRange.max) {
+            return showToast(`ОШИБКА: Возраст участника (${age} лет) на день фестиваля не соответствует выбранной: ${getShortStageName(selectedStageFull)}. Проверьте дату рождения или ступень!`, "error");
+        }
 
         appState.participants.push({
             id: Date.now(), festivalId: appState.activeFestivalId, teamId: currentSelectedTeamId, 
-            name: name, dob: dob, age: age, gender: gender, stage: fullStage
+            name: name, dob: dob, age: age, gender: gender, stage: selectedStageFull
         });
         saveState();
         
         document.getElementById('partName').value = '';
         document.getElementById('partDob').value = '';
-        stageInput.value = '';
-        stageInput.classList.remove('is-valid');
         
         renderParticipants();
         renderResultList(); 
-        showToast(`Участник ${name} зачислен в ${getShortStageName(fullStage)}!`, "success");
+        showToast(`Участник ${name} зачислен в ${getShortStageName(selectedStageFull)}!`, "success");
     });
 
     function deleteParticipant(pId) {
@@ -748,7 +717,7 @@
         });
     }
 
-    // --- ВВОД РЕЗУЛЬТАТОВ ---
+    // --- ВВОД РЕЗУЛЬТАТОВ (ОТОБРАЖЕНИЕ ИСХОДНЫХ ДАННЫХ) ---
     document.getElementById('tab3').addEventListener('shown.bs.tab', () => renderResultList());
     document.getElementById('searchParticipantInput').addEventListener('input', e => renderResultList(e.target.value));
 
@@ -777,27 +746,44 @@
             const team = appState.teams.find(t => t.id === p.teamId);
             const gKey = getGenderKey(p.gender);
             
-            // Берем упражнения ТОЛЬКО для его ступени И его пола
             const validExs = activeFest.exercises[p.stage]?.[gKey] || [];
             const totalExs = validExs.length;
-            const enteredCount = appState.results.filter(r => r.partId === p.id).length;
+            
+            // Получаем все результаты этого участника
+            const userResults = appState.results.filter(r => r.partId === p.id);
+            const enteredCount = userResults.length;
             
             let statusBadge = enteredCount >= totalExs && totalExs > 0
                 ? `<span class="badge bg-success py-2 px-3"><i class="bi bi-check-all"></i> Сдано (${enteredCount}/${totalExs})</span>`
                 : (enteredCount > 0 
                     ? `<span class="badge bg-warning text-dark py-2 px-3"><i class="bi bi-hourglass-split"></i> В процессе (${enteredCount}/${totalExs})</span>` 
                     : `<span class="badge bg-secondary py-2 px-3">Нет данных (0/${totalExs})</span>`);
-                
+            
+            // ФОРМИРУЕМ МИНИ-СПИСОК РЕЗУЛЬТАТОВ ДЛЯ КАРТОЧКИ
+            let resultsSummaryHtml = '';
+            if (enteredCount > 0) {
+                resultsSummaryHtml = '<div class="mt-2 d-flex flex-wrap">';
+                userResults.forEach(r => {
+                    resultsSummaryHtml += `<span class="badge bg-light text-dark border border-secondary me-2 mb-1 fw-normal" style="font-size: 0.85em;">
+                        ${r.exercise}: <strong class="text-primary">${r.raw}</strong> <i class="bi bi-arrow-right-short text-muted"></i> <strong class="text-success">${r.points} б.</strong>
+                    </span>`;
+                });
+                resultsSummaryHtml += '</div>';
+            }
+
             listContainer.innerHTML += `
             <div class="participant-list-item d-flex justify-content-between align-items-center" onclick="openMassResultModal(${p.id})">
-                <div class="d-flex align-items-center">
-                    <div class="me-3 fs-3" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
-                    <div>
+                <div class="d-flex align-items-start w-100">
+                    <div class="me-3 fs-2 mt-1" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
+                    <div class="flex-grow-1 pe-3">
                         <div class="fw-bold fs-5">${p.name} <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em;">${p.age} лет</span></div>
-                        <small class="text-muted"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${getShortStageName(p.stage)}</small>
+                        <div class="text-muted small mb-1"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${getShortStageName(p.stage)}</div>
+                        ${resultsSummaryHtml}
+                    </div>
+                    <div class="text-end d-flex flex-column justify-content-center h-100">
+                        ${statusBadge}
                     </div>
                 </div>
-                <div>${statusBadge}</div>
             </div>`;
         });
     }
@@ -828,7 +814,7 @@
                         <label class="form-label fw-bold mb-2 text-primary">${ex}</label>
                         <div class="row align-items-center">
                             <div class="col-8 col-md-9">
-                                <input type="number" step="0.01" class="form-control form-control-lg modal-res-input border-primary" data-ex="${ex}" value="${val}" placeholder="Фактический результат...">
+                                <input type="number" step="0.01" class="form-control form-control-lg modal-res-input border-primary fw-bold" data-ex="${ex}" value="${val}" placeholder="Фактический результат...">
                             </div>
                             <div class="col-4 col-md-3 border-start">
                                 <div class="form-check form-switch pt-1">
@@ -893,7 +879,7 @@
         }
     }
 
-    // --- РЕЙТИНГ И ЭКСПОРТ (ДВЕ ВКЛАДКИ) ---
+    // --- РЕЙТИНГ И ЭКСПОРТ ---
     document.getElementById('tab4').addEventListener('shown.bs.tab', updateLeaderboards);
 
     function getMedal(index) {
@@ -929,21 +915,24 @@
             .filter(r => r.festivalId === appState.activeFestivalId && r.exercise === ex)
             .sort((a, b) => b.points - a.points);
         
-        eBody.innerHTML = exResults.length === 0 ? '<tr><td colspan="3" class="text-center text-muted">Нет данных</td></tr>' : '';
+        eBody.innerHTML = exResults.length === 0 ? '<tr><td colspan="4" class="text-center text-muted">Нет данных</td></tr>' : '';
         exResults.forEach((r, i) => {
             const p = appState.participants.find(part => part.id === r.partId);
             if(!p) return;
             const t = appState.teams.find(team => team.id === p.teamId);
+            
+            // В таблицу добавлен показ исходного результата (r.raw)
             eBody.innerHTML += `
                 <tr>
                     <td>${getMedal(i)}</td>
                     <td><div class="fw-bold">${p.name}</div><div class="text-muted small">${t ? t.name : ''}</div></td>
+                    <td class="text-center fw-bold text-primary fs-5">${r.raw}</td>
                     <td class="text-end"><span class="badge-points bg-success">${r.points}</span></td>
                 </tr>`;
         });
     }
 
-    // ЭКСПОРТ В EXCEL
+    // ЭКСПОРТ В EXCEL (ДВЕ ВКЛАДКИ)
     document.getElementById('btnExportExcel').addEventListener('click', function() {
         const activeFestResults = appState.results.filter(r => r.festivalId === appState.activeFestivalId);
         
