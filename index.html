@@ -48,6 +48,7 @@
 
         .form-control, .form-select { background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-text); border-radius: 8px; }
         .form-control:focus, .form-select:focus { background-color: var(--input-bg); border-color: var(--primary-color); color: var(--input-text); box-shadow: 0 0 5px var(--primary-color); }
+        .form-control:disabled, .form-control[readonly] { background-color: var(--table-hover); opacity: 0.8; }
         .form-label { color: var(--text-main); font-weight: 600; }
 
         .table { color: var(--text-main); border-color: var(--border-color); }
@@ -60,7 +61,7 @@
         .team-card.selected, .fest-card.selected { background: var(--table-hover); box-shadow: 0 0 10px rgba(0,0,0,0.1); border-color: #28a745; border-left-color: #28a745; }
         
         .badge-points { font-size: 1.1em; padding: 8px 15px; border-radius: 6px; background: var(--primary-color); color: #fff; }
-        .toast { background: var(--panel-bg) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
+        .toast { background: var(--panel-bg) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; z-index: 1055;}
         .text-muted { color: var(--text-muted) !important; }
         .border, .border-bottom, .border-start, .border-top { border-color: var(--border-color) !important; }
 
@@ -71,7 +72,7 @@
 <body data-theme="light">
 
 <div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-fixed bottom-0 end-0 p-4" id="toastContainer" style="z-index: 1100;"></div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-4" id="toastContainer" style="z-index: 9999;"></div>
 </div>
 
 <div class="app-header text-center">
@@ -80,7 +81,7 @@
         <p class="mt-2 mb-2" id="dbStatusBadge"><i class="bi bi-arrow-repeat spin"></i> Загрузка базы нормативов...</p>
         
         <div id="activeFestDisplay" class="badge bg-light text-dark fs-6 px-3 py-2 d-none shadow-sm border" style="border-radius: 20px;">
-            <i class="bi bi-star-fill text-warning"></i> Текущий: <span id="activeFestNameLabel" class="fw-bold"></span>
+            <i class="bi bi-star-fill text-warning"></i> Активный фестиваль: <span id="activeFestNameLabel" class="fw-bold"></span>
         </div>
         
         <div class="theme-selector">
@@ -99,7 +100,7 @@
             <li class="nav-item"><button class="nav-link active" id="tab1" data-bs-toggle="tab" data-bs-target="#fest-pane"><i class="bi bi-collection"></i> 1. Фестивали</button></li>
             <li class="nav-item"><button class="nav-link" id="tab2" data-bs-toggle="tab" data-bs-target="#teams-pane" disabled><i class="bi bi-people"></i> 2. Команды</button></li>
             <li class="nav-item"><button class="nav-link" id="tab3" data-bs-toggle="tab" data-bs-target="#results-pane" disabled><i class="bi bi-card-checklist"></i> 3. Ввод результатов</button></li>
-            <li class="nav-item"><button class="nav-link" id="tab4" data-bs-toggle="tab" data-bs-target="#rating-pane" disabled><i class="bi bi-bar-chart-line"></i> 4. Рейтинг</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab4" data-bs-toggle="tab" data-bs-target="#rating-pane" disabled><i class="bi bi-bar-chart-line"></i> 4. Выгрузка и Рейтинг</button></li>
         </ul>
     </div>
 
@@ -109,8 +110,7 @@
             
             <div id="savedFestivalsArea" class="mb-5" style="display: none;">
                 <h4 class="mb-3" style="color: var(--primary-color);"><i class="bi bi-folder2-open"></i> Сохраненные фестивали</h4>
-                <div class="row g-3" id="savedFestivalsList">
-                    </div>
+                <div class="row g-3" id="savedFestivalsList"></div>
             </div>
 
             <hr class="my-4 border-secondary opacity-25">
@@ -128,12 +128,12 @@
                     </div>
                 </div>
                 
-                <h6 class="form-label mt-4 mb-3">Допустимые возрастные ступени</h6>
+                <h6 class="form-label mt-4 mb-3 text-primary border-bottom pb-2">ШАГ 1. Выберите возрастные ступени:</h6>
                 <div class="row mb-4 g-3" id="stagesContainer"></div>
 
-                <h6 class="form-label mt-4 mb-3">Доступные дисциплины (Упражнения)</h6>
-                <div class="row mb-4 g-3 p-3 rounded border" id="exercisesContainer" style="background: var(--panel-bg);">
-                    <div class="text-muted"><i class="bi bi-info-circle"></i> Выберите хотя бы одну ступень выше...</div>
+                <h6 class="form-label mt-4 mb-3 text-primary border-bottom pb-2">ШАГ 2. Настройте дисциплины для каждой выбранной ступени:</h6>
+                <div class="row mb-4 p-3 rounded border" id="exercisesContainer" style="background: var(--panel-bg);">
+                    <div class="text-muted"><i class="bi bi-info-circle"></i> Сначала выберите ступени выше, чтобы появились упражнения...</div>
                 </div>
 
                 <button type="submit" class="btn btn-success w-100 mt-2 py-3 fs-5 fw-bold shadow-sm">
@@ -158,7 +158,7 @@
                 <div class="col-lg-9 ps-lg-4 border-start" id="participantsArea" style="display: none;">
                     <h5 class="mb-3">Участники команды: <span id="currentTeamTitle" style="color: var(--primary-color); font-weight: bold;"></span></h5>
                     
-                    <div class="p-3 mb-4 rounded border">
+                    <div class="p-3 mb-4 rounded border" style="background: var(--table-hover);">
                         <form id="formParticipant" class="row g-2 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label small mb-1">ФИО</label>
@@ -166,7 +166,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small mb-1">Дата рожд.</label>
-                                <input type="date" class="form-control form-control-sm" id="partDob" required>
+                                <input type="date" class="form-control form-control-sm" id="partDob" required title="Дата рождения нужна для точного расчета ступени">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small mb-1">Пол</label>
@@ -176,18 +176,18 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small mb-1">Ступень</label>
-                                <select class="form-select form-select-sm" id="partStage" required></select>
+                                <label class="form-label small mb-1">Ступень (Автоматически)</label>
+                                <input type="text" class="form-control form-control-sm text-primary fw-bold" id="partStageAuto" readonly placeholder="Укажите дату рождения...">
                             </div>
                             <div class="col-md-2">
-                                <button type="submit" class="btn btn-success btn-sm w-100 py-2" title="Добавить участника"><i class="bi bi-person-plus"></i></button>
+                                <button type="submit" class="btn btn-success btn-sm w-100 py-2 fw-bold" title="Добавить участника"><i class="bi bi-person-plus"></i></button>
                             </div>
                         </form>
                     </div>
                     
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
-                            <thead><tr><th>Участник</th><th>Возраст</th><th>Пол</th><th>Ступень</th><th>Удалить</th></tr></thead>
+                            <thead><tr><th>Участник</th><th>Возраст</th><th>Пол</th><th>Назначенная Ступень</th><th>Удалить</th></tr></thead>
                             <tbody id="participantsList"></tbody>
                         </table>
                     </div>
@@ -216,13 +216,15 @@
 
         <div class="tab-pane fade" id="rating-pane">
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <h3 class="m-0" style="color: var(--primary-color);"><i class="bi bi-trophy"></i> Турнирная таблица</h3>
-                <button id="btnExportExcel" class="btn btn-success px-4 py-2"><i class="bi bi-file-earmark-excel"></i> Скачать Excel</button>
+                <h3 class="m-0" style="color: var(--primary-color);"><i class="bi bi-file-earmark-excel-fill"></i> Выгрузка и Рейтинги</h3>
+                <button id="btnExportExcel" class="btn btn-success px-4 py-2 fs-5 shadow-sm fw-bold">
+                    <i class="bi bi-file-earmark-excel"></i> СКАЧАТЬ EXCEL ПРОТОКОЛ
+                </button>
             </div>
             <div class="row g-4">
                 <div class="col-lg-6">
                     <div class="p-4 rounded h-100 border">
-                        <h5 class="text-center mb-3">🏆 Командный зачет</h5>
+                        <h5 class="text-center mb-3">🏆 Командный зачет (Превью)</h5>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead><tr><th width="15%">Место</th><th>Команда</th><th width="25%" class="text-end">Баллы</th></tr></thead>
@@ -233,7 +235,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="p-4 rounded h-100 border">
-                        <h5 class="text-center mb-3">🏅 Личный зачет по видам</h5>
+                        <h5 class="text-center mb-3">🏅 Личный зачет по видам (Превью)</h5>
                         <select class="form-select mb-4" id="ratingExerciseSelect"></select>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
@@ -252,7 +254,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="background-color: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title">Внесение результатов: <span id="modalPartName" style="color: var(--primary-color); font-weight: bold;"></span></h5>
+                <h5 class="modal-title">Результаты: <span id="modalPartName" style="color: var(--primary-color); font-weight: bold;"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -260,7 +262,7 @@
             </div>
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-primary fw-bold" onclick="saveMassResults()"><i class="bi bi-save"></i> Сохранить все</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" onclick="saveMassResults()"><i class="bi bi-save"></i> Сохранить все</button>
             </div>
         </div>
     </div>
@@ -279,11 +281,12 @@
         document.getElementById('themeSwitch').value = savedTheme;
     }
 
+    // --- УВЕДОМЛЕНИЯ ---
     function showToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         const id = 'toast-' + Date.now();
         let icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
-        const html = `<div id="${id}" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+        const html = `<div id="${id}" class="toast align-items-center shadow" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex"><div class="toast-body fw-bold fs-6"><i class="bi ${icon} me-2 fs-5"></i> ${message}</div>
                 <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
         container.insertAdjacentHTML('beforeend', html);
@@ -296,20 +299,18 @@
     // --- БАЗА И ГЛОБАЛЬНОЕ СОСТОЯНИЕ (LOCAL STORAGE) ---
     let gtoData = []; 
     let appState = { 
-        festivals: [], // [{ id, name, date, stages, exercises }]
-        teams: [],     // [{ id, festivalId, name }]
-        participants: [], // [{ id, festivalId, teamId, name, dob, age, gender, stage }]
-        results: [],   // [{ partId, festivalId, exercise, raw, points }]
+        festivals: [], // [{ id, name, date, stages, exercises(Object) }]
+        teams: [],     
+        participants: [], 
+        results: [],   
         activeFestivalId: null
     };
 
-    // Загрузка состояния из LocalStorage
     function loadState() {
         const saved = localStorage.getItem('gtoManagerData');
-        if (saved) { appState = JSON.parse(saved); }
+        if (saved) appState = JSON.parse(saved);
     }
 
-    // Сохранение состояния в LocalStorage (вызываем при любом изменении)
     function saveState() {
         localStorage.setItem('gtoManagerData', JSON.stringify(appState));
     }
@@ -320,7 +321,7 @@
     let EXERCISES_MAP = {};
 
     window.onload = async function() {
-        loadState(); // Подгружаем сохраненные данные сразу при старте
+        loadState(); 
         
         const badge = document.getElementById('dbStatusBadge');
         try {
@@ -341,7 +342,7 @@
             MOCK_STAGES = Array.from(stagesSet).sort(); 
             for (let stage in EXERCISES_MAP) { EXERCISES_MAP[stage] = Array.from(EXERCISES_MAP[stage]).sort(); }
         } catch (e) {
-            badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning"></i> Работает в демо-режиме (JSON не найден)`;
+            badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning"></i> Демо-режим (JSON не найден)`;
             MOCK_STAGES = ["II СТУПЕНЬ (возрастная группа от 8 до 9 лет)", "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)"];
             EXERCISES_MAP = {
                 "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)": ["Бег на 30 м (с)", "Прыжок в длину (см)"],
@@ -352,170 +353,10 @@
         renderStages();
         renderFestivalsList();
 
-        // Если есть активный фестиваль, открываем его интерфейс
         if (appState.activeFestivalId) {
             activateFestivalTabs(appState.activeFestivalId);
         }
     };
-
-    // --- ЛОГИКА МНОЖЕСТВЕННЫХ ФЕСТИВАЛЕЙ ---
-    function renderFestivalsList() {
-        const area = document.getElementById('savedFestivalsArea');
-        const list = document.getElementById('savedFestivalsList');
-        
-        if (appState.festivals.length === 0) {
-            area.style.display = 'none';
-            return;
-        }
-        
-        area.style.display = 'block';
-        list.innerHTML = '';
-        
-        // Сортируем: сначала новые
-        const sortedFests = [...appState.festivals].sort((a,b) => b.id - a.id);
-        
-        sortedFests.forEach(f => {
-            const isActive = f.id === appState.activeFestivalId ? 'selected' : '';
-            const btnText = isActive ? '<i class="bi bi-check-circle-fill"></i> Открыт' : 'Открыть';
-            const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
-            
-            // Подсчет статистики для карточки
-            const fTeams = appState.teams.filter(t => t.festivalId === f.id).length;
-            const fParts = appState.participants.filter(p => p.festivalId === f.id).length;
-
-            list.innerHTML += `
-            <div class="col-md-6 col-lg-4">
-                <div class="fest-card ${isActive}" onclick="activateFestivalTabs(${f.id})">
-                    <h5 class="fw-bold mb-2">${f.name}</h5>
-                    <div class="text-muted small mb-3">
-                        <div><i class="bi bi-calendar"></i> ${f.date}</div>
-                        <div><i class="bi bi-people-fill"></i> Команд: ${fTeams} | Участников: ${fParts}</div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button class="btn ${btnClass} btn-sm fw-bold w-100 me-2">${btnText}</button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteFestival(event, ${f.id})" title="Удалить"><i class="bi bi-trash"></i></button>
-                    </div>
-                </div>
-            </div>`;
-        });
-    }
-
-    function deleteFestival(event, festId) {
-        event.stopPropagation(); // Чтобы клик не "открыл" фестиваль
-        if(confirm('Вы уверены, что хотите безвозвратно удалить этот фестиваль, все его команды и результаты?')) {
-            appState.festivals = appState.festivals.filter(f => f.id !== festId);
-            appState.teams = appState.teams.filter(t => t.festivalId !== festId);
-            appState.participants = appState.participants.filter(p => p.festivalId !== festId);
-            appState.results = appState.results.filter(r => r.festivalId !== festId);
-            
-            if (appState.activeFestivalId === festId) {
-                appState.activeFestivalId = null;
-                document.getElementById('activeFestDisplay').classList.add('d-none');
-                ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = true);
-            }
-            saveState();
-            renderFestivalsList();
-            showToast("Фестиваль удален", "success");
-        }
-    }
-
-    function activateFestivalTabs(festId) {
-        appState.activeFestivalId = festId;
-        const activeFest = appState.festivals.find(f => f.id === festId);
-        if (!activeFest) return;
-        
-        saveState();
-        renderFestivalsList(); // Обновляем выделение зеленым
-
-        // Показываем плашку активного фестиваля в шапке
-        document.getElementById('activeFestDisplay').classList.remove('d-none');
-        document.getElementById('activeFestNameLabel').innerText = activeFest.name;
-
-        // Разблокируем вкладки
-        ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
-        
-        // Подготавливаем списки ступеней и упражнений в формах под настройки именно ЭТОГО фестиваля
-        document.getElementById('partStage').innerHTML = activeFest.stages.map(s => `<option value="${s}">${s}</option>`).join('');
-        const rSelect = document.getElementById('ratingExerciseSelect');
-        rSelect.innerHTML = activeFest.exercises.map(e => `<option value="${e}">${e}</option>`).join('');
-        rSelect.addEventListener('change', renderExerciseRating);
-
-        // Очищаем фокус команд и обновляем UI 2, 3, 4 вкладок
-        currentSelectedTeamId = null;
-        document.getElementById('participantsArea').style.display = 'none';
-        
-        renderTeams();
-        renderResultList();
-        updateLeaderboards();
-
-        showToast(`Открыт фестиваль: ${activeFest.name}`, "success");
-        new bootstrap.Tab(document.getElementById('tab2')).show(); // Автопереход на вкладку Команд
-    }
-
-    // --- ФОРМА СОЗДАНИЯ ФЕСТИВАЛЯ ---
-    function renderStages() {
-        const container = document.getElementById('stagesContainer');
-        container.innerHTML = '';
-        MOCK_STAGES.forEach((stage, idx) => {
-            container.innerHTML += `
-                <div class="col-md-6">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input stage-cb fs-5" type="checkbox" role="switch" value="${stage}" id="stg_${idx}">
-                        <label class="form-check-label pt-1" for="stg_${idx}">${stage}</label>
-                    </div>
-                </div>`;
-        });
-        document.querySelectorAll('.stage-cb').forEach(cb => cb.addEventListener('change', updateExercisesList));
-    }
-
-    function updateExercisesList() {
-        const selected = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
-        let availableEx = new Set();
-        selected.forEach(st => (EXERCISES_MAP[st] || []).forEach(ex => availableEx.add(ex)));
-        
-        const container = document.getElementById('exercisesContainer');
-        container.innerHTML = '';
-        if(availableEx.size === 0) {
-            container.innerHTML = '<div class="text-muted"><i class="bi bi-info-circle"></i> Сначала выберите ступени...</div>';
-            return;
-        }
-        
-        Array.from(availableEx).sort().forEach((ex, idx) => {
-            container.innerHTML += `
-                <div class="col-md-6">
-                    <div class="form-check">
-                        <input class="form-check-input ex-cb" type="checkbox" value="${ex}" id="ex_${idx}" checked>
-                        <label class="form-check-label" for="ex_${idx}">${ex}</label>
-                    </div>
-                </div>`;
-        });
-    }
-
-    document.getElementById('formFestival').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const stages = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
-        const exercises = Array.from(document.querySelectorAll('.ex-cb:checked')).map(cb => cb.value);
-        
-        if(stages.length === 0) return showToast("Ошибка: Выберите хотя бы одну ступень!", "error");
-
-        const newFest = {
-            id: Date.now(),
-            name: document.getElementById('festName').value,
-            date: document.getElementById('festDate').value,
-            stages: stages,
-            exercises: exercises
-        };
-
-        appState.festivals.push(newFest);
-        saveState();
-        
-        // Очищаем форму создания
-        document.getElementById('festName').value = '';
-        document.querySelectorAll('.stage-cb').forEach(cb => cb.checked = false);
-        updateExercisesList();
-
-        activateFestivalTabs(newFest.id);
-    });
 
     // --- ФУНКЦИИ ВОЗРАСТА ---
     function calculateAge(dobStr, festivalDateStr) {
@@ -539,7 +380,184 @@
         return { min, max };
     }
 
-    // --- КОМАНДЫ (С учетом активного фестиваля) ---
+    function getShortStageName(stageStr) {
+        return stageStr.split('(')[0].trim();
+    }
+
+    // --- МЕНЕДЖЕР ФЕСТИВАЛЕЙ ---
+    function renderFestivalsList() {
+        const area = document.getElementById('savedFestivalsArea');
+        const list = document.getElementById('savedFestivalsList');
+        
+        if (appState.festivals.length === 0) {
+            area.style.display = 'none';
+            return;
+        }
+        
+        area.style.display = 'block';
+        list.innerHTML = '';
+        const sortedFests = [...appState.festivals].sort((a,b) => b.id - a.id);
+        
+        sortedFests.forEach(f => {
+            const isActive = f.id === appState.activeFestivalId ? 'selected' : '';
+            const btnText = isActive ? '<i class="bi bi-check-circle-fill"></i> Открыт' : 'Открыть';
+            const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
+            const fTeams = appState.teams.filter(t => t.festivalId === f.id).length;
+            const fParts = appState.participants.filter(p => p.festivalId === f.id).length;
+            
+            // Красивый вывод выбранных ступеней
+            const stagesShort = f.stages.map(getShortStageName).join(', ');
+
+            list.innerHTML += `
+            <div class="col-md-6 col-lg-4">
+                <div class="fest-card ${isActive}" onclick="activateFestivalTabs(${f.id})">
+                    <h5 class="fw-bold mb-2">${f.name}</h5>
+                    <div class="text-muted small mb-3">
+                        <div><i class="bi bi-calendar"></i> Дата: ${f.date}</div>
+                        <div><i class="bi bi-bar-chart-steps"></i> Ступени: <span class="text-primary">${stagesShort}</span></div>
+                        <div class="mt-1"><i class="bi bi-people-fill"></i> Команд: ${fTeams} | Участников: ${fParts}</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button class="btn ${btnClass} btn-sm fw-bold w-100 me-2">${btnText}</button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteFestival(event, ${f.id})" title="Удалить"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+
+    function deleteFestival(event, festId) {
+        event.stopPropagation(); 
+        if(confirm('Вы уверены, что хотите БЕЗВОЗВРАТНО удалить этот фестиваль, все его команды и результаты?')) {
+            appState.festivals = appState.festivals.filter(f => f.id !== festId);
+            appState.teams = appState.teams.filter(t => t.festivalId !== festId);
+            appState.participants = appState.participants.filter(p => p.festivalId !== festId);
+            appState.results = appState.results.filter(r => r.festivalId !== festId);
+            
+            if (appState.activeFestivalId === festId) {
+                appState.activeFestivalId = null;
+                document.getElementById('activeFestDisplay').classList.add('d-none');
+                ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = true);
+            }
+            saveState();
+            renderFestivalsList();
+            showToast("Фестиваль успешно удален", "success");
+        }
+    }
+
+    function activateFestivalTabs(festId) {
+        appState.activeFestivalId = festId;
+        const activeFest = appState.festivals.find(f => f.id === festId);
+        if (!activeFest) return;
+        
+        saveState();
+        renderFestivalsList(); 
+
+        document.getElementById('activeFestDisplay').classList.remove('d-none');
+        document.getElementById('activeFestNameLabel').innerText = activeFest.name;
+
+        ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
+        
+        // Сбор всех уникальных упражнений фестиваля для общего селектора в рейтинге
+        let allUniqueExs = new Set();
+        Object.values(activeFest.exercises).forEach(arr => arr.forEach(ex => allUniqueExs.add(ex)));
+        
+        const rSelect = document.getElementById('ratingExerciseSelect');
+        rSelect.innerHTML = Array.from(allUniqueExs).sort().map(e => `<option value="${e}">${e}</option>`).join('');
+        rSelect.addEventListener('change', renderExerciseRating);
+
+        currentSelectedTeamId = null;
+        document.getElementById('participantsArea').style.display = 'none';
+        
+        // Сбрасываем форму участника
+        document.getElementById('partDob').value = '';
+        document.getElementById('partStageAuto').value = '';
+        document.getElementById('partStageAuto').classList.remove('is-valid', 'is-invalid');
+        
+        renderTeams();
+        renderResultList();
+        updateLeaderboards();
+
+        showToast(`Открыт фестиваль: ${activeFest.name}`, "success");
+        new bootstrap.Tab(document.getElementById('tab2')).show(); 
+    }
+
+    // --- ФОРМА СОЗДАНИЯ ФЕСТИВАЛЯ ---
+    function renderStages() {
+        const container = document.getElementById('stagesContainer');
+        container.innerHTML = '';
+        MOCK_STAGES.forEach((stage, idx) => {
+            container.innerHTML += `
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input stage-cb fs-5 border-primary" type="checkbox" role="switch" value="${stage}" id="stg_${idx}">
+                        <label class="form-check-label pt-1" for="stg_${idx}">${getShortStageName(stage)}</label>
+                    </div>
+                </div>`;
+        });
+        document.querySelectorAll('.stage-cb').forEach(cb => cb.addEventListener('change', updateExercisesList));
+    }
+
+    function updateExercisesList() {
+        const selectedStages = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
+        const container = document.getElementById('exercisesContainer');
+        container.innerHTML = '';
+        
+        if(selectedStages.length === 0) {
+            container.innerHTML = '<div class="text-muted"><i class="bi bi-info-circle"></i> Сначала выберите ступени выше...</div>';
+            return;
+        }
+        
+        selectedStages.forEach((st, stIdx) => {
+            let exHtml = `<div class="col-12 mt-3"><h6 class="text-primary fw-bold border-bottom pb-1 mb-3"><i class="bi bi-list-check"></i> ${getShortStageName(st)}</h6><div class="row g-2">`;
+            const exs = EXERCISES_MAP[st] || [];
+            exs.forEach((ex, idx) => {
+                const safeId = `ex_${stIdx}_${idx}`;
+                exHtml += `
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input class="form-check-input ex-cb" type="checkbox" data-stage="${st}" value="${ex}" id="${safeId}" checked>
+                        <label class="form-check-label" style="font-size:0.9em;" for="${safeId}">${ex}</label>
+                    </div>
+                </div>`;
+            });
+            exHtml += `</div></div>`;
+            container.innerHTML += exHtml;
+        });
+    }
+
+    document.getElementById('formFestival').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const stages = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
+        if(stages.length === 0) return showToast("Ошибка: Выберите хотя бы одну возрастную ступень!", "error");
+
+        // Сохраняем упражнения строго по ступеням
+        const exercisesMap = {};
+        stages.forEach(st => exercisesMap[st] = []);
+        document.querySelectorAll('.ex-cb:checked').forEach(cb => {
+            const st = cb.getAttribute('data-stage');
+            if(exercisesMap[st]) exercisesMap[st].push(cb.value);
+        });
+
+        const newFest = {
+            id: Date.now(),
+            name: document.getElementById('festName').value,
+            date: document.getElementById('festDate').value,
+            stages: stages,
+            exercises: exercisesMap
+        };
+
+        appState.festivals.push(newFest);
+        saveState();
+        
+        document.getElementById('festName').value = '';
+        document.querySelectorAll('.stage-cb').forEach(cb => cb.checked = false);
+        updateExercisesList();
+
+        activateFestivalTabs(newFest.id);
+    });
+
+    // --- КОМАНДЫ ---
     document.getElementById('formTeam').addEventListener('submit', (e) => {
         e.preventDefault();
         const tName = document.getElementById('teamName').value;
@@ -567,7 +585,7 @@
             div.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-shield-shaded me-2"></i> ${t.name}</strong>
-                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteTeam(event, ${t.id})"><i class="bi bi-x"></i></button>
+                    <button class="btn btn-sm btn-outline-danger border-0 py-0" onclick="deleteTeam(event, ${t.id})"><i class="bi bi-x fs-5"></i></button>
                 </div>`;
             div.onclick = () => selectTeam(t.id, t.name);
             list.appendChild(div);
@@ -597,7 +615,43 @@
         renderParticipants();
     }
 
-    // --- УЧАСТНИКИ ---
+    // --- УЧАСТНИКИ И ОПРЕДЕЛЕНИЕ СТУПЕНИ ПО ДАТЕ РОЖДЕНИЯ ---
+    document.getElementById('partDob').addEventListener('change', function(e) {
+        const dob = this.value;
+        const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
+        const stageInput = document.getElementById('partStageAuto');
+        
+        if(!dob || !activeFest) {
+            stageInput.value = '';
+            stageInput.classList.remove('is-valid', 'is-invalid');
+            return;
+        }
+        
+        const age = calculateAge(dob, activeFest.date);
+        let matchedStage = "";
+        
+        // Ищем подходящую ступень среди тех, что выбраны в ЭТОМ фестивале
+        for(let st of activeFest.stages) {
+            const range = getStageAgeRange(st);
+            if(age >= range.min && age <= range.max) {
+                matchedStage = st;
+                break;
+            }
+        }
+        
+        if(matchedStage) {
+            stageInput.value = getShortStageName(matchedStage);
+            stageInput.setAttribute('data-full-stage', matchedStage);
+            stageInput.classList.remove('is-invalid');
+            stageInput.classList.add('is-valid');
+        } else {
+            stageInput.value = `Блок: Возраст ${age} лет не подходит!`;
+            stageInput.setAttribute('data-full-stage', '');
+            stageInput.classList.add('is-invalid');
+            stageInput.classList.remove('is-valid');
+        }
+    });
+
     document.getElementById('formParticipant').addEventListener('submit', (e) => {
         e.preventDefault();
         if(!currentSelectedTeamId || !appState.activeFestivalId) return;
@@ -606,27 +660,30 @@
         const name = document.getElementById('partName').value;
         const dob = document.getElementById('partDob').value;
         const gender = document.getElementById('partGender').value;
-        const stage = document.getElementById('partStage').value;
+        
+        const stageInput = document.getElementById('partStageAuto');
+        const fullStage = stageInput.getAttribute('data-full-stage');
+
+        if (!fullStage) {
+            return showToast("Невозможно добавить участника: его возраст не подходит под ступени фестиваля!", "error");
+        }
 
         const age = calculateAge(dob, activeFest.date);
-        const allowedAge = getStageAgeRange(stage);
-
-        if (age < allowedAge.min || age > allowedAge.max) {
-            return showToast(`Ошибка: Возраст участника (${age} лет) на ${activeFest.date} не подходит для: ${stage}`, "error");
-        }
 
         appState.participants.push({
             id: Date.now(), festivalId: appState.activeFestivalId, teamId: currentSelectedTeamId, 
-            name: name, dob: dob, age: age, gender: gender, stage: stage
+            name: name, dob: dob, age: age, gender: gender, stage: fullStage
         });
         saveState();
         
         document.getElementById('partName').value = '';
         document.getElementById('partDob').value = '';
+        stageInput.value = '';
+        stageInput.classList.remove('is-valid');
         
         renderParticipants();
         renderResultList(); 
-        showToast(`Участник ${name} заявлен!`, "success");
+        showToast(`Участник ${name} (${age} лет) зачислен в ${getShortStageName(fullStage)}!`, "success");
     });
 
     function deleteParticipant(pId) {
@@ -651,7 +708,7 @@
             const isMale = p.gender.toLowerCase().startsWith('м');
             let icon = isMale ? '<i class="bi bi-gender-male text-primary"></i>' : '<i class="bi bi-gender-female text-danger"></i>';
             tbody.innerHTML += `<tr>
-                <td class="fw-bold">${p.name}</td><td>${p.age} лет</td><td>${icon} ${p.gender}</td><td><span class="text-muted small">${p.stage}</span></td>
+                <td class="fw-bold">${p.name}</td><td>${p.age} лет</td><td>${icon} ${p.gender}</td><td><span class="badge bg-secondary">${getShortStageName(p.stage)}</span></td>
                 <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteParticipant(${p.id})"><i class="bi bi-trash"></i></button></td>
             </tr>`;
         });
@@ -685,9 +742,10 @@
         
         filteredParts.forEach(p => {
             const team = appState.teams.find(t => t.id === p.teamId);
-            const stageExs = EXERCISES_MAP[p.stage] || [];
-            const validExs = activeFest.exercises.filter(e => stageExs.includes(e));
-            const totalExs = validExs.length > 0 ? validExs.length : activeFest.exercises.length;
+            
+            // Берем только те упражнения, которые были ВЫБРАНЫ ДЛЯ ЕГО СТУПЕНИ при создании фестиваля
+            const validExs = activeFest.exercises[p.stage] || [];
+            const totalExs = validExs.length;
             const enteredCount = appState.results.filter(r => r.partId === p.id).length;
             
             let statusBadge = enteredCount >= totalExs && totalExs > 0
@@ -702,7 +760,7 @@
                     <div class="me-3 fs-3" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
                     <div>
                         <div class="fw-bold fs-5">${p.name} <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em;">${p.age} лет</span></div>
-                        <small class="text-muted"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${p.stage}</small>
+                        <small class="text-muted"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${getShortStageName(p.stage)}</small>
                     </div>
                 </div>
                 <div>${statusBadge}</div>
@@ -717,35 +775,37 @@
         
         document.getElementById('modalPartName').innerText = part.name;
         
-        const stageExs = EXERCISES_MAP[part.stage] || [];
-        const validExs = activeFest.exercises.filter(e => stageExs.includes(e));
-        const exercisesToShow = validExs.length > 0 ? validExs : activeFest.exercises;
+        const validExs = activeFest.exercises[part.stage] || [];
         
         let html = '';
-        exercisesToShow.forEach((ex, idx) => {
-            const existing = appState.results.find(r => r.partId === pId && r.exercise === ex);
-            const val = existing ? existing.raw : '';
-            const isTimeWord = ex.toLowerCase().includes('с)') || ex.toLowerCase().includes('мин');
-            const checkedAttr = isTimeWord ? 'checked' : '';
-            
-            html += `
-            <div class="col-12">
-                <div class="p-3 rounded border" style="background: var(--table-hover);">
-                    <label class="form-label fw-bold mb-2">${ex}</label>
-                    <div class="row align-items-center">
-                        <div class="col-8 col-md-9">
-                            <input type="number" step="0.01" class="form-control form-control-lg modal-res-input border-primary" data-ex="${ex}" value="${val}" placeholder="Введите результат...">
-                        </div>
-                        <div class="col-4 col-md-3 border-start">
-                            <div class="form-check form-switch pt-1">
-                                <input class="form-check-input modal-res-time" type="checkbox" id="modTime_${idx}" ${checkedAttr}>
-                                <label class="form-check-label small" for="modTime_${idx}">Меньше=Лучше</label>
+        if(validExs.length === 0) {
+            html = '<div class="alert alert-warning">Для этой ступени в данном фестивале не выбрано ни одного испытания.</div>';
+        } else {
+            validExs.forEach((ex, idx) => {
+                const existing = appState.results.find(r => r.partId === pId && r.exercise === ex);
+                const val = existing ? existing.raw : '';
+                const isTimeWord = ex.toLowerCase().includes('с)') || ex.toLowerCase().includes('мин');
+                const checkedAttr = isTimeWord ? 'checked' : '';
+                
+                html += `
+                <div class="col-12">
+                    <div class="p-3 rounded border" style="background: var(--table-hover);">
+                        <label class="form-label fw-bold mb-2 text-primary">${ex}</label>
+                        <div class="row align-items-center">
+                            <div class="col-8 col-md-9">
+                                <input type="number" step="0.01" class="form-control form-control-lg modal-res-input border-primary" data-ex="${ex}" value="${val}" placeholder="Фактический результат...">
+                            </div>
+                            <div class="col-4 col-md-3 border-start">
+                                <div class="form-check form-switch pt-1">
+                                    <input class="form-check-input modal-res-time" type="checkbox" id="modTime_${idx}" ${checkedAttr}>
+                                    <label class="form-check-label small" for="modTime_${idx}">Меньше=Лучше</label>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>`;
-        });
+                </div>`;
+            });
+        }
         
         document.getElementById('modalExercisesList').innerHTML = html;
         const modal = new bootstrap.Modal(document.getElementById('massResultModal'));
@@ -787,18 +847,18 @@
             savedCount++;
         });
         
-        saveState(); // СОХРАНЯЕМ В ПАМЯТЬ БРАУЗЕРА
+        saveState(); 
         
         bootstrap.Modal.getInstance(document.getElementById('massResultModal')).hide();
         
         if(savedCount > 0) {
-            showToast(`Сохранено: ${savedCount} дисциплин`, "success");
+            showToast(`Сохранено: ${savedCount} дисциплин для ${part.name}`, "success");
             updateLeaderboards();
             renderResultList(document.getElementById('searchParticipantInput').value); 
         }
     }
 
-    // --- РЕЙТИНГ И ЭКСПОРТ ---
+    // --- РЕЙТИНГ И ЭКСПОРТ (ДВЕ ВКЛАДКИ) ---
     document.getElementById('tab4').addEventListener('shown.bs.tab', updateLeaderboards);
 
     function getMedal(index) {
@@ -810,7 +870,6 @@
 
     function updateLeaderboards() {
         if(!appState.activeFestivalId) return;
-        
         const activeTeams = appState.teams.filter(t => t.festivalId === appState.activeFestivalId);
         
         const teamScores = activeTeams.map(t => {
@@ -849,7 +908,7 @@
         });
     }
 
-    // ЭКСПОРТ В EXCEL
+    // ЭКСПОРТ В EXCEL (ДВЕ ВКЛАДКИ)
     document.getElementById('btnExportExcel').addEventListener('click', function() {
         const activeFestResults = appState.results.filter(r => r.festivalId === appState.activeFestivalId);
         
@@ -858,25 +917,47 @@
         }
         try {
             const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
-            
-            let exportData = [
-                ["Фестиваль", "Команда", "ФИО Участника", "Возраст", "Пол", "Ступень", "Дисциплина", "Результат", "Баллы"]
+            const workbook = XLSX.utils.book_new();
+
+            // === ВКЛАДКА 1: ЛИЧНЫЙ ЗАЧЕТ ===
+            let exportDataInd = [
+                ["Команда", "ФИО Участника", "Возраст", "Пол", "Возрастная Ступень", "Упражнение (Дисциплина)", "Фактический результат", "Начислено баллов"]
             ];
             
             activeFestResults.forEach(r => {
                 const p = appState.participants.find(part => part.id === r.partId);
                 const t = appState.teams.find(team => team.id === p.teamId);
-                exportData.push([activeFest.name, t ? t.name : '', p.name, p.age, p.gender, p.stage, r.exercise, r.raw, r.points]);
+                exportDataInd.push([t ? t.name : 'Без команды', p.name, p.age, p.gender, getShortStageName(p.stage), r.exercise, r.raw, r.points]);
             });
             
-            const worksheet = XLSX.utils.aoa_to_sheet(exportData);
-            worksheet['!cols'] = [ {wpx: 150}, {wpx: 150}, {wpx: 200}, {wpx: 60}, {wpx: 80}, {wpx: 250}, {wpx: 250}, {wpx: 80}, {wpx: 80} ];
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Результаты ГТО");
-            
+            const wsInd = XLSX.utils.aoa_to_sheet(exportDataInd);
+            wsInd['!cols'] = [ {wpx: 150}, {wpx: 200}, {wpx: 60}, {wpx: 80}, {wpx: 150}, {wpx: 250}, {wpx: 120}, {wpx: 120} ];
+            XLSX.utils.book_append_sheet(workbook, wsInd, "Личный зачет");
+
+            // === ВКЛАДКА 2: КОМАНДНЫЙ ЗАЧЕТ ===
+            let exportDataTeam = [
+                ["Место", "Название команды", "Сумма Баллов"]
+            ];
+
+            const activeTeams = appState.teams.filter(t => t.festivalId === appState.activeFestivalId);
+            const teamScores = activeTeams.map(t => {
+                const pIds = appState.participants.filter(p => p.teamId === t.id).map(p => p.id);
+                const total = appState.results.filter(r => pIds.includes(r.partId)).reduce((sum, r) => sum + r.points, 0);
+                return { name: t.name, score: total };
+            }).sort((a, b) => b.score - a.score);
+
+            teamScores.forEach((t, index) => {
+                exportDataTeam.push([index + 1, t.name, t.score]);
+            });
+
+            const wsTeam = XLSX.utils.aoa_to_sheet(exportDataTeam);
+            wsTeam['!cols'] = [ {wpx: 60}, {wpx: 250}, {wpx: 120} ];
+            XLSX.utils.book_append_sheet(workbook, wsTeam, "Командный зачет");
+
+            // Скачиваем файл
             let fileName = (activeFest.name || 'GTO_Results').replace(/[<>:"/\\|?*]+/g, '_') + '.xlsx';
             XLSX.writeFile(workbook, fileName);
-            showToast("Файл Excel успешно скачан!", "success");
+            showToast("Файл Excel с двумя вкладками успешно скачан!", "success");
         } catch (error) {
             console.error(error);
             showToast("Ошибка создания файла Excel.", "error");
