@@ -3,98 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления фестивалем ГТО</title>
+    <title>Панель управления фестивалями ГТО</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        /* ================= НАСТРОЙКА ТЕМ (CSS ПЕРЕМЕННЫЕ) ================= */
+        /* ================= НАСТРОЙКА ТЕМ ================= */
         :root {
-            /* СВЕТЛАЯ ТЕМА (По умолчанию) */
-            --bg-body: #f4f7f6;
-            --text-main: #2c3e50;
-            --text-muted: #6c757d;
-            --panel-bg: #ffffff;
-            --panel-border: rgba(0,0,0,0.05);
-            --panel-shadow: 0 8px 30px rgba(0,0,0,0.04);
-            --primary-color: #0d6efd;
-            --header-bg: linear-gradient(135deg, #0d6efd 0%, #00d2ff 100%);
-            --header-text: #ffffff;
-            --input-bg: #fff;
-            --input-border: #ced4da;
-            --input-text: #212529;
-            --table-hover: #f8f9fa;
-            --border-color: #e1e5eb;
+            --bg-body: #f4f7f6; --text-main: #2c3e50; --text-muted: #6c757d;
+            --panel-bg: #ffffff; --panel-border: rgba(0,0,0,0.05); --panel-shadow: 0 8px 30px rgba(0,0,0,0.04);
+            --primary-color: #0d6efd; --header-bg: linear-gradient(135deg, #0d6efd 0%, #00d2ff 100%);
+            --header-text: #ffffff; --input-bg: #fff; --input-border: #ced4da;
+            --input-text: #212529; --table-hover: #f8f9fa; --border-color: #e1e5eb;
         }
 
         [data-theme="dark"] {
-            /* ТЕМНАЯ ТЕМА */
-            --bg-body: #121212;
-            --text-main: #e0e0e0;
-            --text-muted: #a0a0a0;
-            --panel-bg: #1e1e1e;
-            --panel-border: #333;
-            --panel-shadow: 0 8px 30px rgba(0,0,0,0.5);
-            --primary-color: #3b82f6;
-            --header-bg: #1a1a1a;
-            --header-text: #e0e0e0;
-            --input-bg: #2d2d2d;
-            --input-border: #444;
-            --input-text: #e0e0e0;
-            --table-hover: #2a2a2a;
-            --border-color: #333;
+            --bg-body: #121212; --text-main: #e0e0e0; --text-muted: #a0a0a0;
+            --panel-bg: #1e1e1e; --panel-border: #333; --panel-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            --primary-color: #3b82f6; --header-bg: #1a1a1a; --header-text: #e0e0e0;
+            --input-bg: #2d2d2d; --input-border: #444; --input-text: #e0e0e0;
+            --table-hover: #2a2a2a; --border-color: #333;
         }
 
         [data-theme="neon"] {
-            /* НЕОНОВАЯ ТЕМА */
-            --bg-body: #0a0a10;
-            --text-main: #e0e0e0;
-            --text-muted: #aaa;
-            --panel-bg: rgba(20, 20, 30, 0.85);
-            --panel-border: rgba(0, 243, 255, 0.3);
-            --panel-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
-            --primary-color: #00f3ff;
-            --header-bg: rgba(10, 10, 15, 0.9);
-            --header-text: #00f3ff;
-            --input-bg: rgba(0,0,0,0.6);
-            --input-border: #333;
-            --input-text: #00f3ff;
-            --table-hover: rgba(255,0,234,0.1);
-            --border-color: #444;
+            --bg-body: #0a0a10; --text-main: #e0e0e0; --text-muted: #aaa;
+            --panel-bg: rgba(20, 20, 30, 0.85); --panel-border: rgba(0, 243, 255, 0.3); --panel-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            --primary-color: #00f3ff; --header-bg: rgba(10, 10, 15, 0.9); --header-text: #00f3ff;
+            --input-bg: rgba(0,0,0,0.6); --input-border: #333; --input-text: #00f3ff;
+            --table-hover: rgba(255,0,234,0.1); --border-color: #444;
         }
 
-        /* Инверсия крестика закрытия для темных тем */
-        [data-theme="dark"] .btn-close, [data-theme="neon"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        [data-theme="dark"] .btn-close, [data-theme="neon"] .btn-close { filter: invert(1); }
 
-        /* ================= БАЗОВЫЕ СТИЛИ ================= */
-        body {
-            background-color: var(--bg-body); color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            padding-bottom: 60px; min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        
-        .app-header {
-            background: var(--header-bg); color: var(--header-text);
-            padding: 25px 0; margin-bottom: 30px; position: relative;
-        }
-        
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; padding-bottom: 60px; min-height: 100vh; transition: 0.3s; }
+        .app-header { background: var(--header-bg); color: var(--header-text); padding: 25px 0; margin-bottom: 30px; position: relative; }
         .theme-selector { position: absolute; top: 20px; right: 20px; }
-
-        .glass-panel {
-            background: var(--panel-bg); border-radius: 15px;
-            box-shadow: var(--panel-shadow); padding: 30px;
-            border: 1px solid var(--panel-border); transition: all 0.3s;
-        }
-
-        /* Вкладки */
+        .glass-panel { background: var(--panel-bg); border-radius: 15px; box-shadow: var(--panel-shadow); padding: 30px; border: 1px solid var(--panel-border); transition: 0.3s; }
+        
         .nav-pills { background: var(--panel-bg); border-radius: 15px; padding: 10px; border: 1px solid var(--panel-border); display: inline-flex; margin-bottom: 25px; }
         .nav-pills .nav-link { color: var(--text-muted); border-radius: 10px; font-weight: 600; padding: 10px 20px; margin: 0 5px; }
         .nav-pills .nav-link:hover:not(.active):not(.disabled) { background: var(--table-hover); }
         .nav-pills .nav-link.active { background: var(--primary-color); color: #fff; }
 
-        /* Формы и таблицы */
         .form-control, .form-select { background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-text); border-radius: 8px; }
         .form-control:focus, .form-select:focus { background-color: var(--input-bg); border-color: var(--primary-color); color: var(--input-text); box-shadow: 0 0 5px var(--primary-color); }
         .form-label { color: var(--text-main); font-weight: 600; }
@@ -104,18 +55,15 @@
         .table td { background-color: transparent; color: var(--text-main); }
         .table-hover tbody tr:hover td { background-color: var(--table-hover); }
 
-        /* Элементы списков */
-        .team-card { border-left: 4px solid var(--primary-color); background: var(--panel-bg); border: 1px solid var(--panel-border); border-left-width: 4px; border-radius: 8px; margin-bottom: 12px; padding: 10px; cursor: pointer; transition: all 0.2s; }
-        .team-card:hover { transform: translateX(5px); background: var(--table-hover); }
-        .team-card.selected { background: var(--table-hover); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .team-card, .fest-card { border-left: 4px solid var(--primary-color); background: var(--panel-bg); border: 1px solid var(--panel-border); border-left-width: 4px; border-radius: 8px; margin-bottom: 12px; padding: 15px; cursor: pointer; transition: 0.2s; }
+        .team-card:hover, .fest-card:hover { transform: translateY(-2px); background: var(--table-hover); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .team-card.selected, .fest-card.selected { background: var(--table-hover); box-shadow: 0 0 10px rgba(0,0,0,0.1); border-color: #28a745; border-left-color: #28a745; }
         
         .badge-points { font-size: 1.1em; padding: 8px 15px; border-radius: 6px; background: var(--primary-color); color: #fff; }
-
         .toast { background: var(--panel-bg) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
         .text-muted { color: var(--text-muted) !important; }
         .border, .border-bottom, .border-start, .border-top { border-color: var(--border-color) !important; }
 
-        /* Списки участников для 3-й вкладки */
         .participant-list-item { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; padding: 15px; cursor: pointer; transition: 0.2s; }
         .participant-list-item:hover { background: var(--table-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     </style>
@@ -128,11 +76,15 @@
 
 <div class="app-header text-center">
     <div class="container position-relative">
-        <h2 class="fw-bold mb-0"><i class="bi bi-trophy-fill text-warning"></i> Управление фестивалем ГТО</h2>
-        <p class="mt-2 mb-0" id="dbStatusBadge"><i class="bi bi-arrow-repeat spin"></i> Загрузка базы нормативов...</p>
+        <h2 class="fw-bold mb-0"><i class="bi bi-trophy-fill text-warning"></i> Управление ГТО</h2>
+        <p class="mt-2 mb-2" id="dbStatusBadge"><i class="bi bi-arrow-repeat spin"></i> Загрузка базы нормативов...</p>
+        
+        <div id="activeFestDisplay" class="badge bg-light text-dark fs-6 px-3 py-2 d-none shadow-sm border" style="border-radius: 20px;">
+            <i class="bi bi-star-fill text-warning"></i> Текущий: <span id="activeFestNameLabel" class="fw-bold"></span>
+        </div>
         
         <div class="theme-selector">
-            <select class="form-select form-select-sm" id="themeSwitch" style="width: auto; background-color: rgba(255,255,255,0.9); color: #000; border: none; font-weight: bold;">
+            <select class="form-select form-select-sm shadow-sm" id="themeSwitch" style="width: auto; background-color: rgba(255,255,255,0.9); color: #000; border: none; font-weight: bold;">
                 <option value="light">☀️ Светлая</option>
                 <option value="dark">🌙 Темная</option>
                 <option value="neon">⚡ Неон</option>
@@ -144,18 +96,27 @@
 <div class="container">
     <div class="text-center">
         <ul class="nav nav-pills justify-content-center" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation"><button class="nav-link active" id="tab1" data-bs-toggle="tab" data-bs-target="#fest-pane" type="button"><i class="bi bi-gear"></i> 1. Настройки</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" id="tab2" data-bs-toggle="tab" data-bs-target="#teams-pane" type="button" disabled><i class="bi bi-people"></i> 2. Команды</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" id="tab3" data-bs-toggle="tab" data-bs-target="#results-pane" type="button" disabled><i class="bi bi-card-checklist"></i> 3. Ввод результатов</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" id="tab4" data-bs-toggle="tab" data-bs-target="#rating-pane" type="button" disabled><i class="bi bi-bar-chart-line"></i> 4. Рейтинг</button></li>
+            <li class="nav-item"><button class="nav-link active" id="tab1" data-bs-toggle="tab" data-bs-target="#fest-pane"><i class="bi bi-collection"></i> 1. Фестивали</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab2" data-bs-toggle="tab" data-bs-target="#teams-pane" disabled><i class="bi bi-people"></i> 2. Команды</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab3" data-bs-toggle="tab" data-bs-target="#results-pane" disabled><i class="bi bi-card-checklist"></i> 3. Ввод результатов</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab4" data-bs-toggle="tab" data-bs-target="#rating-pane" disabled><i class="bi bi-bar-chart-line"></i> 4. Рейтинг</button></li>
         </ul>
     </div>
 
     <div class="tab-content glass-panel" id="myTabContent">
         
         <div class="tab-pane fade show active" id="fest-pane">
-            <h4 class="mb-4" style="color: var(--primary-color);"><i class="bi bi-calendar-event"></i> Параметры фестиваля</h4>
-            <form id="formFestival">
+            
+            <div id="savedFestivalsArea" class="mb-5" style="display: none;">
+                <h4 class="mb-3" style="color: var(--primary-color);"><i class="bi bi-folder2-open"></i> Сохраненные фестивали</h4>
+                <div class="row g-3" id="savedFestivalsList">
+                    </div>
+            </div>
+
+            <hr class="my-4 border-secondary opacity-25">
+
+            <h4 class="mb-4 text-success"><i class="bi bi-plus-circle"></i> Создать новый фестиваль</h4>
+            <form id="formFestival" class="p-4 rounded border" style="background: var(--table-hover);">
                 <div class="row mb-4">
                     <div class="col-md-8 mb-3 mb-md-0">
                         <label class="form-label">Название фестиваля</label>
@@ -168,44 +129,46 @@
                 </div>
                 
                 <h6 class="form-label mt-4 mb-3">Допустимые возрастные ступени</h6>
-                <div class="row mb-4 g-3" id="stagesContainer">
-                    </div>
+                <div class="row mb-4 g-3" id="stagesContainer"></div>
 
                 <h6 class="form-label mt-4 mb-3">Доступные дисциплины (Упражнения)</h6>
-                <div class="row mb-4 g-3 p-3 rounded border" id="exercisesContainer">
-                    <div class="text-muted"><i class="bi bi-info-circle"></i> Ожидание загрузки базы или выбора ступеней...</div>
+                <div class="row mb-4 g-3 p-3 rounded border" id="exercisesContainer" style="background: var(--panel-bg);">
+                    <div class="text-muted"><i class="bi bi-info-circle"></i> Выберите хотя бы одну ступень выше...</div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 mt-2 py-2 fs-5">
-                    <i class="bi bi-check-circle"></i> Открыть регистрацию
+                <button type="submit" class="btn btn-success w-100 mt-2 py-3 fs-5 fw-bold shadow-sm">
+                    <i class="bi bi-check-circle"></i> Создать и открыть регистрацию
                 </button>
             </form>
         </div>
 
         <div class="tab-pane fade" id="teams-pane">
             <div class="row">
-                <div class="col-lg-4 mb-4 mb-lg-0 pe-lg-4">
-                    <h5 class="mb-3" style="color: var(--primary-color);"><i class="bi bi-flag"></i> Регистрация команды</h5>
+                <div class="col-lg-3 mb-4 mb-lg-0 pe-lg-3">
+                    <h5 class="mb-3" style="color: var(--primary-color);"><i class="bi bi-flag"></i> Команды</h5>
                     <form id="formTeam" class="mb-4">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="teamName" placeholder="Название команды" required>
+                            <input type="text" class="form-control" id="teamName" placeholder="Название" required>
                             <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg"></i></button>
                         </div>
                     </form>
-                    <h6 class="form-label mb-3">Список команд:</h6>
                     <div id="teamsList"><div class="text-muted small">Команд пока нет</div></div>
                 </div>
                 
-                <div class="col-lg-8 ps-lg-4 border-start" id="participantsArea" style="display: none;">
-                    <h5 class="mb-3">Участники: <span id="currentTeamTitle" style="color: var(--primary-color); font-weight: bold;"></span></h5>
+                <div class="col-lg-9 ps-lg-4 border-start" id="participantsArea" style="display: none;">
+                    <h5 class="mb-3">Участники команды: <span id="currentTeamTitle" style="color: var(--primary-color); font-weight: bold;"></span></h5>
                     
                     <div class="p-3 mb-4 rounded border">
                         <form id="formParticipant" class="row g-2 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small mb-1">ФИО участника</label>
+                            <div class="col-md-3">
+                                <label class="form-label small mb-1">ФИО</label>
                                 <input type="text" class="form-control form-control-sm" id="partName" placeholder="Иванов И.И." required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Дата рожд.</label>
+                                <input type="date" class="form-control form-control-sm" id="partDob" required>
+                            </div>
+                            <div class="col-md-2">
                                 <label class="form-label small mb-1">Пол</label>
                                 <select class="form-select form-select-sm" id="partGender" required>
                                     <option value="Мальчики">Мужской</option>
@@ -217,14 +180,14 @@
                                 <select class="form-select form-select-sm" id="partStage" required></select>
                             </div>
                             <div class="col-md-2">
-                                <button type="submit" class="btn btn-success btn-sm w-100 py-2"><i class="bi bi-person-plus"></i></button>
+                                <button type="submit" class="btn btn-success btn-sm w-100 py-2" title="Добавить участника"><i class="bi bi-person-plus"></i></button>
                             </div>
                         </form>
                     </div>
                     
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
-                            <thead><tr><th>Участник</th><th>Пол</th><th>Ступень</th></tr></thead>
+                            <thead><tr><th>Участник</th><th>Возраст</th><th>Пол</th><th>Ступень</th><th>Удалить</th></tr></thead>
                             <tbody id="participantsList"></tbody>
                         </table>
                     </div>
@@ -235,8 +198,8 @@
         <div class="tab-pane fade" id="results-pane">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 style="color: var(--primary-color); margin: 0;"><i class="bi bi-stopwatch"></i> Судейский протокол</h4>
+                    <div class="mb-4">
+                        <h4 style="color: var(--primary-color);"><i class="bi bi-stopwatch"></i> Судейский протокол</h4>
                     </div>
                     
                     <div class="input-group mb-4 shadow-sm" style="border-radius: 10px; overflow: hidden;">
@@ -282,7 +245,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -294,8 +256,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="modalExercisesList" class="row g-3">
-                    </div>
+                <div id="modalExercisesList" class="row g-3"></div>
             </div>
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
@@ -308,71 +269,79 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // --- ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ---
-    document.getElementById('themeSwitch').addEventListener('change', function(e) {
-        document.body.setAttribute('data-theme', e.target.value);
+    document.getElementById('themeSwitch').addEventListener('change', function(e) { 
+        document.body.setAttribute('data-theme', e.target.value); 
+        localStorage.setItem('gtoTheme', e.target.value);
     });
+    const savedTheme = localStorage.getItem('gtoTheme');
+    if (savedTheme) {
+        document.body.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeSwitch').value = savedTheme;
+    }
 
-    // --- УВЕДОМЛЕНИЯ ---
     function showToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         const id = 'toast-' + Date.now();
         let icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
-        const html = `
-            <div id="${id}" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body fw-bold fs-6"><i class="bi ${icon} me-2 fs-5"></i> ${message}</div>
-                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>`;
+        const html = `<div id="${id}" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex"><div class="toast-body fw-bold fs-6"><i class="bi ${icon} me-2 fs-5"></i> ${message}</div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
         container.insertAdjacentHTML('beforeend', html);
         const toastEl = document.getElementById(id);
-        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
         toast.show();
         toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
     }
 
-    // --- БАЗА И ДАННЫЕ ---
+    // --- БАЗА И ГЛОБАЛЬНОЕ СОСТОЯНИЕ (LOCAL STORAGE) ---
     let gtoData = []; 
-    let appState = { festival: { name: '', date: '', stages: [], exercises: [] }, teams: [], participants: [], results: [] };
+    let appState = { 
+        festivals: [], // [{ id, name, date, stages, exercises }]
+        teams: [],     // [{ id, festivalId, name }]
+        participants: [], // [{ id, festivalId, teamId, name, dob, age, gender, stage }]
+        results: [],   // [{ partId, festivalId, exercise, raw, points }]
+        activeFestivalId: null
+    };
+
+    // Загрузка состояния из LocalStorage
+    function loadState() {
+        const saved = localStorage.getItem('gtoManagerData');
+        if (saved) { appState = JSON.parse(saved); }
+    }
+
+    // Сохранение состояния в LocalStorage (вызываем при любом изменении)
+    function saveState() {
+        localStorage.setItem('gtoManagerData', JSON.stringify(appState));
+    }
+
     let currentSelectedTeamId = null;
     let currentModalParticipantId = null;
-
-    // Списки для динамической загрузки из JSON
     let MOCK_STAGES = [];
     let EXERCISES_MAP = {};
 
     window.onload = async function() {
+        loadState(); // Подгружаем сохраненные данные сразу при старте
+        
         const badge = document.getElementById('dbStatusBadge');
         try {
             const response = await fetch('gto_database_clean.json');
             gtoData = await response.json();
             badge.innerHTML = `<i class="bi bi-check-circle-fill text-light"></i> База ГТО успешно загружена`;
 
-            // Умный сбор всех ступеней и упражнений из базы данных
             const stagesSet = new Set();
             gtoData.forEach(row => {
                 const stage = row['Ступень'];
                 const exercise = row['Упражнение'];
-                
                 if (!stage || !exercise) return;
-
                 stagesSet.add(stage);
                 if (!EXERCISES_MAP[stage]) EXERCISES_MAP[stage] = new Set();
                 EXERCISES_MAP[stage].add(exercise);
             });
 
-            // Конвертация в массивы для удобной работы
-            MOCK_STAGES = Array.from(stagesSet);
-            // Сортировка ступеней по римским цифрам (приблизительно, для красоты списка)
-            MOCK_STAGES.sort(); 
-
-            for (let stage in EXERCISES_MAP) {
-                EXERCISES_MAP[stage] = Array.from(EXERCISES_MAP[stage]).sort();
-            }
-
+            MOCK_STAGES = Array.from(stagesSet).sort(); 
+            for (let stage in EXERCISES_MAP) { EXERCISES_MAP[stage] = Array.from(EXERCISES_MAP[stage]).sort(); }
         } catch (e) {
             badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning"></i> Работает в демо-режиме (JSON не найден)`;
-            // Фейковые данные для теста интерфейса без сервера
             MOCK_STAGES = ["II СТУПЕНЬ (возрастная группа от 8 до 9 лет)", "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)"];
             EXERCISES_MAP = {
                 "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)": ["Бег на 30 м (с)", "Прыжок в длину (см)"],
@@ -380,10 +349,110 @@
             };
         }
         
-        // Отрисовываем ступени на вкладке "Настройки"
         renderStages();
+        renderFestivalsList();
+
+        // Если есть активный фестиваль, открываем его интерфейс
+        if (appState.activeFestivalId) {
+            activateFestivalTabs(appState.activeFestivalId);
+        }
     };
 
+    // --- ЛОГИКА МНОЖЕСТВЕННЫХ ФЕСТИВАЛЕЙ ---
+    function renderFestivalsList() {
+        const area = document.getElementById('savedFestivalsArea');
+        const list = document.getElementById('savedFestivalsList');
+        
+        if (appState.festivals.length === 0) {
+            area.style.display = 'none';
+            return;
+        }
+        
+        area.style.display = 'block';
+        list.innerHTML = '';
+        
+        // Сортируем: сначала новые
+        const sortedFests = [...appState.festivals].sort((a,b) => b.id - a.id);
+        
+        sortedFests.forEach(f => {
+            const isActive = f.id === appState.activeFestivalId ? 'selected' : '';
+            const btnText = isActive ? '<i class="bi bi-check-circle-fill"></i> Открыт' : 'Открыть';
+            const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
+            
+            // Подсчет статистики для карточки
+            const fTeams = appState.teams.filter(t => t.festivalId === f.id).length;
+            const fParts = appState.participants.filter(p => p.festivalId === f.id).length;
+
+            list.innerHTML += `
+            <div class="col-md-6 col-lg-4">
+                <div class="fest-card ${isActive}" onclick="activateFestivalTabs(${f.id})">
+                    <h5 class="fw-bold mb-2">${f.name}</h5>
+                    <div class="text-muted small mb-3">
+                        <div><i class="bi bi-calendar"></i> ${f.date}</div>
+                        <div><i class="bi bi-people-fill"></i> Команд: ${fTeams} | Участников: ${fParts}</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button class="btn ${btnClass} btn-sm fw-bold w-100 me-2">${btnText}</button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteFestival(event, ${f.id})" title="Удалить"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+
+    function deleteFestival(event, festId) {
+        event.stopPropagation(); // Чтобы клик не "открыл" фестиваль
+        if(confirm('Вы уверены, что хотите безвозвратно удалить этот фестиваль, все его команды и результаты?')) {
+            appState.festivals = appState.festivals.filter(f => f.id !== festId);
+            appState.teams = appState.teams.filter(t => t.festivalId !== festId);
+            appState.participants = appState.participants.filter(p => p.festivalId !== festId);
+            appState.results = appState.results.filter(r => r.festivalId !== festId);
+            
+            if (appState.activeFestivalId === festId) {
+                appState.activeFestivalId = null;
+                document.getElementById('activeFestDisplay').classList.add('d-none');
+                ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = true);
+            }
+            saveState();
+            renderFestivalsList();
+            showToast("Фестиваль удален", "success");
+        }
+    }
+
+    function activateFestivalTabs(festId) {
+        appState.activeFestivalId = festId;
+        const activeFest = appState.festivals.find(f => f.id === festId);
+        if (!activeFest) return;
+        
+        saveState();
+        renderFestivalsList(); // Обновляем выделение зеленым
+
+        // Показываем плашку активного фестиваля в шапке
+        document.getElementById('activeFestDisplay').classList.remove('d-none');
+        document.getElementById('activeFestNameLabel').innerText = activeFest.name;
+
+        // Разблокируем вкладки
+        ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
+        
+        // Подготавливаем списки ступеней и упражнений в формах под настройки именно ЭТОГО фестиваля
+        document.getElementById('partStage').innerHTML = activeFest.stages.map(s => `<option value="${s}">${s}</option>`).join('');
+        const rSelect = document.getElementById('ratingExerciseSelect');
+        rSelect.innerHTML = activeFest.exercises.map(e => `<option value="${e}">${e}</option>`).join('');
+        rSelect.addEventListener('change', renderExerciseRating);
+
+        // Очищаем фокус команд и обновляем UI 2, 3, 4 вкладок
+        currentSelectedTeamId = null;
+        document.getElementById('participantsArea').style.display = 'none';
+        
+        renderTeams();
+        renderResultList();
+        updateLeaderboards();
+
+        showToast(`Открыт фестиваль: ${activeFest.name}`, "success");
+        new bootstrap.Tab(document.getElementById('tab2')).show(); // Автопереход на вкладку Команд
+    }
+
+    // --- ФОРМА СОЗДАНИЯ ФЕСТИВАЛЯ ---
     function renderStages() {
         const container = document.getElementById('stagesContainer');
         container.innerHTML = '';
@@ -424,31 +493,58 @@
 
     document.getElementById('formFestival').addEventListener('submit', (e) => {
         e.preventDefault();
-        appState.festival.name = document.getElementById('festName').value;
-        appState.festival.stages = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
-        appState.festival.exercises = Array.from(document.querySelectorAll('.ex-cb:checked')).map(cb => cb.value);
+        const stages = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
+        const exercises = Array.from(document.querySelectorAll('.ex-cb:checked')).map(cb => cb.value);
         
-        if(appState.festival.stages.length === 0) return showToast("Ошибка: Выберите хотя бы одну ступень!", "error");
+        if(stages.length === 0) return showToast("Ошибка: Выберите хотя бы одну ступень!", "error");
 
-        // Открываем остальные вкладки
-        ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
-        
-        // Заполняем выпадающие списки
-        document.getElementById('partStage').innerHTML = appState.festival.stages.map(s => `<option value="${s}">${s}</option>`).join('');
-        
-        const rSelect = document.getElementById('ratingExerciseSelect');
-        rSelect.innerHTML = appState.festival.exercises.map(e => `<option value="${e}">${e}</option>`).join('');
-        rSelect.addEventListener('change', renderExerciseRating);
+        const newFest = {
+            id: Date.now(),
+            name: document.getElementById('festName').value,
+            date: document.getElementById('festDate').value,
+            stages: stages,
+            exercises: exercises
+        };
 
-        showToast("Настройки сохранены. Регистрация открыта.", "success");
-        new bootstrap.Tab(document.getElementById('tab2')).show();
+        appState.festivals.push(newFest);
+        saveState();
+        
+        // Очищаем форму создания
+        document.getElementById('festName').value = '';
+        document.querySelectorAll('.stage-cb').forEach(cb => cb.checked = false);
+        updateExercisesList();
+
+        activateFestivalTabs(newFest.id);
     });
 
-    // --- ВКЛАДКА 2: КОМАНДЫ И УЧАСТНИКИ ---
+    // --- ФУНКЦИИ ВОЗРАСТА ---
+    function calculateAge(dobStr, festivalDateStr) {
+        if (!dobStr || !festivalDateStr) return 0;
+        const dob = new Date(dobStr);
+        const fest = new Date(festivalDateStr);
+        let age = fest.getFullYear() - dob.getFullYear();
+        const m = fest.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && fest.getDate() < dob.getDate())) { age--; }
+        return age;
+    }
+
+    function getStageAgeRange(stageStr) {
+        let min = 0, max = 999;
+        const matchTo = stageStr.match(/от\s*(\d+).*?до\s*(\d+)/i);
+        if (matchTo) { min = parseInt(matchTo[1]); max = parseInt(matchTo[2]); } 
+        else {
+            const matchOlder = stageStr.match(/от\s*(\d+).*?старше/i);
+            if (matchOlder) { min = parseInt(matchOlder[1]); }
+        }
+        return { min, max };
+    }
+
+    // --- КОМАНДЫ (С учетом активного фестиваля) ---
     document.getElementById('formTeam').addEventListener('submit', (e) => {
         e.preventDefault();
         const tName = document.getElementById('teamName').value;
-        appState.teams.push({ id: Date.now(), name: tName });
+        appState.teams.push({ id: Date.now(), festivalId: appState.activeFestivalId, name: tName });
+        saveState();
         document.getElementById('teamName').value = '';
         renderTeams();
         showToast(`Команда «${tName}» добавлена`, "success");
@@ -456,16 +552,41 @@
 
     function renderTeams() {
         const list = document.getElementById('teamsList');
-        if (appState.teams.length === 0) return;
+        const activeTeams = appState.teams.filter(t => t.festivalId === appState.activeFestivalId);
+        
+        if (activeTeams.length === 0) {
+            list.innerHTML = '<div class="text-muted small">В этом фестивале пока нет команд</div>';
+            return;
+        }
+        
         list.innerHTML = '';
-        appState.teams.forEach(t => {
+        activeTeams.forEach(t => {
             const isSelected = t.id === currentSelectedTeamId ? 'selected' : '';
             const div = document.createElement('div');
             div.className = `team-card ${isSelected}`;
-            div.innerHTML = `<strong><i class="bi bi-shield-shaded me-2"></i> ${t.name}</strong>`;
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong><i class="bi bi-shield-shaded me-2"></i> ${t.name}</strong>
+                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteTeam(event, ${t.id})"><i class="bi bi-x"></i></button>
+                </div>`;
             div.onclick = () => selectTeam(t.id, t.name);
             list.appendChild(div);
         });
+    }
+
+    function deleteTeam(event, teamId) {
+        event.stopPropagation();
+        if(confirm('Удалить команду и всех ее участников?')) {
+            appState.teams = appState.teams.filter(t => t.id !== teamId);
+            appState.participants = appState.participants.filter(p => p.teamId !== teamId);
+            saveState();
+            if(currentSelectedTeamId === teamId) {
+                currentSelectedTeamId = null;
+                document.getElementById('participantsArea').style.display = 'none';
+            }
+            renderTeams();
+            renderResultList();
+        }
     }
 
     function selectTeam(id, name) {
@@ -476,49 +597,79 @@
         renderParticipants();
     }
 
+    // --- УЧАСТНИКИ ---
     document.getElementById('formParticipant').addEventListener('submit', (e) => {
         e.preventDefault();
-        if(!currentSelectedTeamId) return;
+        if(!currentSelectedTeamId || !appState.activeFestivalId) return;
+        
+        const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
         const name = document.getElementById('partName').value;
+        const dob = document.getElementById('partDob').value;
+        const gender = document.getElementById('partGender').value;
+        const stage = document.getElementById('partStage').value;
+
+        const age = calculateAge(dob, activeFest.date);
+        const allowedAge = getStageAgeRange(stage);
+
+        if (age < allowedAge.min || age > allowedAge.max) {
+            return showToast(`Ошибка: Возраст участника (${age} лет) на ${activeFest.date} не подходит для: ${stage}`, "error");
+        }
+
         appState.participants.push({
-            id: Date.now(), teamId: currentSelectedTeamId, name: name,
-            gender: document.getElementById('partGender').value,
-            stage: document.getElementById('partStage').value
+            id: Date.now(), festivalId: appState.activeFestivalId, teamId: currentSelectedTeamId, 
+            name: name, dob: dob, age: age, gender: gender, stage: stage
         });
+        saveState();
+        
         document.getElementById('partName').value = '';
+        document.getElementById('partDob').value = '';
+        
         renderParticipants();
-        renderResultList(); // Обновляем список для судей
-        showToast(`Участник ${name} добавлен`, "success");
+        renderResultList(); 
+        showToast(`Участник ${name} заявлен!`, "success");
     });
+
+    function deleteParticipant(pId) {
+        if(confirm('Удалить участника и его результаты?')) {
+            appState.participants = appState.participants.filter(p => p.id !== pId);
+            appState.results = appState.results.filter(r => r.partId !== pId);
+            saveState();
+            renderParticipants();
+            renderResultList();
+        }
+    }
 
     function renderParticipants() {
         const tbody = document.getElementById('participantsList');
         tbody.innerHTML = '';
         const teamParts = appState.participants.filter(p => p.teamId === currentSelectedTeamId);
         if(teamParts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Нет участников</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Нет участников</td></tr>';
             return;
         }
         teamParts.forEach(p => {
-            // Обработка слов Мальчики/Мужчины, Девочки/Женщины для правильных иконок
             const isMale = p.gender.toLowerCase().startsWith('м');
             let icon = isMale ? '<i class="bi bi-gender-male text-primary"></i>' : '<i class="bi bi-gender-female text-danger"></i>';
-            tbody.innerHTML += `<tr><td class="fw-bold">${p.name}</td><td>${icon} ${p.gender}</td><td><span class="text-muted small">${p.stage}</span></td></tr>`;
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">${p.name}</td><td>${p.age} лет</td><td>${icon} ${p.gender}</td><td><span class="text-muted small">${p.stage}</span></td>
+                <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteParticipant(${p.id})"><i class="bi bi-trash"></i></button></td>
+            </tr>`;
         });
     }
 
-    // --- ВКЛАДКА 3: ВВОД РЕЗУЛЬТАТОВ (СПИСОК И ПОИСКОВИК) ---
+    // --- ВВОД РЕЗУЛЬТАТОВ ---
     document.getElementById('tab3').addEventListener('shown.bs.tab', () => renderResultList());
-
-    document.getElementById('searchParticipantInput').addEventListener('input', function(e) {
-        renderResultList(e.target.value);
-    });
+    document.getElementById('searchParticipantInput').addEventListener('input', e => renderResultList(e.target.value));
 
     function renderResultList(searchTerm = '') {
         const listContainer = document.getElementById('participantResultList');
         listContainer.innerHTML = '';
         
-        let filteredParts = appState.participants;
+        if(!appState.activeFestivalId) return;
+        const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
+        
+        let filteredParts = appState.participants.filter(p => p.festivalId === appState.activeFestivalId);
+        
         if(searchTerm) {
             const term = searchTerm.toLowerCase();
             filteredParts = filteredParts.filter(p => {
@@ -534,13 +685,9 @@
         
         filteredParts.forEach(p => {
             const team = appState.teams.find(t => t.id === p.teamId);
-            
-            // Считаем сколько упражнений доступно для его ступени
             const stageExs = EXERCISES_MAP[p.stage] || [];
-            const validExs = appState.festival.exercises.filter(e => stageExs.includes(e));
-            const totalExs = validExs.length > 0 ? validExs.length : appState.festival.exercises.length;
-            
-            // Считаем сколько уже введено
+            const validExs = activeFest.exercises.filter(e => stageExs.includes(e));
+            const totalExs = validExs.length > 0 ? validExs.length : activeFest.exercises.length;
             const enteredCount = appState.results.filter(r => r.partId === p.id).length;
             
             let statusBadge = enteredCount >= totalExs && totalExs > 0
@@ -554,7 +701,7 @@
                 <div class="d-flex align-items-center">
                     <div class="me-3 fs-3" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
                     <div>
-                        <div class="fw-bold fs-5">${p.name}</div>
+                        <div class="fw-bold fs-5">${p.name} <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em;">${p.age} лет</span></div>
                         <small class="text-muted"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${p.stage}</small>
                     </div>
                 </div>
@@ -563,22 +710,21 @@
         });
     }
 
-    // Открытие модального окна для участника
     function openMassResultModal(pId) {
         currentModalParticipantId = pId;
         const part = appState.participants.find(p => p.id === pId);
+        const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
+        
         document.getElementById('modalPartName').innerText = part.name;
         
         const stageExs = EXERCISES_MAP[part.stage] || [];
-        const validExs = appState.festival.exercises.filter(e => stageExs.includes(e));
-        const exercisesToShow = validExs.length > 0 ? validExs : appState.festival.exercises;
+        const validExs = activeFest.exercises.filter(e => stageExs.includes(e));
+        const exercisesToShow = validExs.length > 0 ? validExs : activeFest.exercises;
         
         let html = '';
         exercisesToShow.forEach((ex, idx) => {
             const existing = appState.results.find(r => r.partId === pId && r.exercise === ex);
             const val = existing ? existing.raw : '';
-            
-            // Автоопределение галочки "Время"
             const isTimeWord = ex.toLowerCase().includes('с)') || ex.toLowerCase().includes('мин');
             const checkedAttr = isTimeWord ? 'checked' : '';
             
@@ -606,7 +752,6 @@
         modal.show();
     }
 
-    // Сохранение результатов из модального окна
     function saveMassResults() {
         const pId = currentModalParticipantId;
         const part = appState.participants.find(p => p.id === pId);
@@ -614,19 +759,17 @@
         const times = document.querySelectorAll('.modal-res-time');
         
         let savedCount = 0;
-        const searchGenderPrefix = part.gender.charAt(0).toUpperCase(); // 'М' или 'Ж'
+        const searchGenderPrefix = part.gender.charAt(0).toUpperCase(); 
         
         inputs.forEach((input, idx) => {
             const rawVal = parseFloat(input.value);
-            if (isNaN(rawVal)) return; // Игнорируем пустые поля
+            if (isNaN(rawVal)) return; 
             
             const exercise = input.getAttribute('data-ex');
             const isTime = times[idx].checked;
             
-            // Расчет баллов
             let points = 1;
             if (gtoData.length > 0) {
-                // Ищем норматив по ступени, упражнению и 1 букве пола (М/Ж)
                 let norms = gtoData.filter(row => row['Ступень'] === part.stage && row['Упражнение'] === exercise && row['Пол'].toUpperCase().startsWith(searchGenderPrefix));
                 norms = norms.map(r => ({ p: parseInt(r['Баллы']), v: parseFloat(r['Результат']) })).filter(r => !isNaN(r.v));
                 norms.sort((a, b) => b.p - a.p); 
@@ -640,20 +783,22 @@
             }
             
             appState.results = appState.results.filter(r => !(r.partId === pId && r.exercise === exercise));
-            appState.results.push({ partId: pId, exercise: exercise, raw: rawVal, points: points });
+            appState.results.push({ partId: pId, festivalId: appState.activeFestivalId, exercise: exercise, raw: rawVal, points: points });
             savedCount++;
         });
+        
+        saveState(); // СОХРАНЯЕМ В ПАМЯТЬ БРАУЗЕРА
         
         bootstrap.Modal.getInstance(document.getElementById('massResultModal')).hide();
         
         if(savedCount > 0) {
-            showToast(`Сохранено: ${savedCount} дисциплин для ${part.name}`, "success");
+            showToast(`Сохранено: ${savedCount} дисциплин`, "success");
             updateLeaderboards();
             renderResultList(document.getElementById('searchParticipantInput').value); 
         }
     }
 
-    // --- ВКЛАДКА 4: РЕЙТИНГ И ЭКСПОРТ ---
+    // --- РЕЙТИНГ И ЭКСПОРТ ---
     document.getElementById('tab4').addEventListener('shown.bs.tab', updateLeaderboards);
 
     function getMedal(index) {
@@ -664,7 +809,11 @@
     }
 
     function updateLeaderboards() {
-        const teamScores = appState.teams.map(t => {
+        if(!appState.activeFestivalId) return;
+        
+        const activeTeams = appState.teams.filter(t => t.festivalId === appState.activeFestivalId);
+        
+        const teamScores = activeTeams.map(t => {
             const pIds = appState.participants.filter(p => p.teamId === t.id).map(p => p.id);
             const total = appState.results.filter(r => pIds.includes(r.partId)).reduce((sum, r) => sum + r.points, 0);
             return { name: t.name, score: total };
@@ -681,7 +830,10 @@
     function renderExerciseRating() {
         const ex = document.getElementById('ratingExerciseSelect').value;
         const eBody = document.getElementById('leaderboardExercise');
-        const exResults = appState.results.filter(r => r.exercise === ex).sort((a, b) => b.points - a.points);
+        
+        const exResults = appState.results
+            .filter(r => r.festivalId === appState.activeFestivalId && r.exercise === ex)
+            .sort((a, b) => b.points - a.points);
         
         eBody.innerHTML = exResults.length === 0 ? '<tr><td colspan="3" class="text-center text-muted">Нет данных</td></tr>' : '';
         exResults.forEach((r, i) => {
@@ -691,7 +843,7 @@
             eBody.innerHTML += `
                 <tr>
                     <td>${getMedal(i)}</td>
-                    <td><div class="fw-bold">${p.name}</div><div class="text-muted small">${t.name}</div></td>
+                    <td><div class="fw-bold">${p.name}</div><div class="text-muted small">${t ? t.name : ''}</div></td>
                     <td class="text-end"><span class="badge-points bg-success">${r.points}</span></td>
                 </tr>`;
         });
@@ -699,28 +851,35 @@
 
     // ЭКСПОРТ В EXCEL
     document.getElementById('btnExportExcel').addEventListener('click', function() {
-        if (appState.results.length === 0) {
-            return showToast("Ошибка: Нет данных для выгрузки. Сначала внесите результаты.", "error");
+        const activeFestResults = appState.results.filter(r => r.festivalId === appState.activeFestivalId);
+        
+        if (activeFestResults.length === 0) {
+            return showToast("Ошибка: Нет данных для выгрузки в текущем фестивале.", "error");
         }
         try {
+            const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
+            
             let exportData = [
-                ["Команда", "ФИО Участника", "Пол", "Возрастная Ступень", "Упражнение (Дисциплина)", "Исходный результат", "Начислено баллов ГТО"]
+                ["Фестиваль", "Команда", "ФИО Участника", "Возраст", "Пол", "Ступень", "Дисциплина", "Результат", "Баллы"]
             ];
-            appState.results.forEach(r => {
+            
+            activeFestResults.forEach(r => {
                 const p = appState.participants.find(part => part.id === r.partId);
                 const t = appState.teams.find(team => team.id === p.teamId);
-                exportData.push([t.name, p.name, p.gender, p.stage, r.exercise, r.raw, r.points]);
+                exportData.push([activeFest.name, t ? t.name : '', p.name, p.age, p.gender, p.stage, r.exercise, r.raw, r.points]);
             });
+            
             const worksheet = XLSX.utils.aoa_to_sheet(exportData);
-            worksheet['!cols'] = [ {wpx: 150}, {wpx: 200}, {wpx: 100}, {wpx: 250}, {wpx: 250}, {wpx: 120}, {wpx: 150} ];
+            worksheet['!cols'] = [ {wpx: 150}, {wpx: 150}, {wpx: 200}, {wpx: 60}, {wpx: 80}, {wpx: 250}, {wpx: 250}, {wpx: 80}, {wpx: 80} ];
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Результаты ГТО");
-            let fileName = (appState.festival.name || 'GTO_Results').replace(/[<>:"/\\|?*]+/g, '_') + '.xlsx';
+            
+            let fileName = (activeFest.name || 'GTO_Results').replace(/[<>:"/\\|?*]+/g, '_') + '.xlsx';
             XLSX.writeFile(workbook, fileName);
-            showToast("Файл Excel успешно сформирован и скачан!", "success");
+            showToast("Файл Excel успешно скачан!", "success");
         } catch (error) {
             console.error(error);
-            showToast("Произошла ошибка при создании файла Excel.", "error");
+            showToast("Ошибка создания файла Excel.", "error");
         }
     });
 </script>
