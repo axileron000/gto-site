@@ -88,11 +88,13 @@
             border: 1px solid var(--panel-border); transition: all 0.3s;
         }
 
+        /* Вкладки */
         .nav-pills { background: var(--panel-bg); border-radius: 15px; padding: 10px; border: 1px solid var(--panel-border); display: inline-flex; margin-bottom: 25px; }
         .nav-pills .nav-link { color: var(--text-muted); border-radius: 10px; font-weight: 600; padding: 10px 20px; margin: 0 5px; }
         .nav-pills .nav-link:hover:not(.active):not(.disabled) { background: var(--table-hover); }
         .nav-pills .nav-link.active { background: var(--primary-color); color: #fff; }
 
+        /* Формы и таблицы */
         .form-control, .form-select { background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-text); border-radius: 8px; }
         .form-control:focus, .form-select:focus { background-color: var(--input-bg); border-color: var(--primary-color); color: var(--input-text); box-shadow: 0 0 5px var(--primary-color); }
         .form-label { color: var(--text-main); font-weight: 600; }
@@ -102,6 +104,7 @@
         .table td { background-color: transparent; color: var(--text-main); }
         .table-hover tbody tr:hover td { background-color: var(--table-hover); }
 
+        /* Элементы списков */
         .team-card { border-left: 4px solid var(--primary-color); background: var(--panel-bg); border: 1px solid var(--panel-border); border-left-width: 4px; border-radius: 8px; margin-bottom: 12px; padding: 10px; cursor: pointer; transition: all 0.2s; }
         .team-card:hover { transform: translateX(5px); background: var(--table-hover); }
         .team-card.selected { background: var(--table-hover); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -112,7 +115,7 @@
         .text-muted { color: var(--text-muted) !important; }
         .border, .border-bottom, .border-start, .border-top { border-color: var(--border-color) !important; }
 
-        /* Стили для списка участников в результатах */
+        /* Списки участников для 3-й вкладки */
         .participant-list-item { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; padding: 15px; cursor: pointer; transition: 0.2s; }
         .participant-list-item:hover { background: var(--table-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     </style>
@@ -163,13 +166,19 @@
                         <input type="date" class="form-control" id="festDate" required>
                     </div>
                 </div>
+                
                 <h6 class="form-label mt-4 mb-3">Допустимые возрастные ступени</h6>
-                <div class="row mb-4 g-3" id="stagesContainer"></div>
+                <div class="row mb-4 g-3" id="stagesContainer">
+                    </div>
+
                 <h6 class="form-label mt-4 mb-3">Доступные дисциплины (Упражнения)</h6>
                 <div class="row mb-4 g-3 p-3 rounded border" id="exercisesContainer">
-                    <div class="text-muted"><i class="bi bi-info-circle"></i> Выберите хотя бы одну ступень выше...</div>
+                    <div class="text-muted"><i class="bi bi-info-circle"></i> Ожидание загрузки базы или выбора ступеней...</div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 mt-2 py-2 fs-5"><i class="bi bi-check-circle"></i> Открыть регистрацию</button>
+
+                <button type="submit" class="btn btn-primary w-100 mt-2 py-2 fs-5">
+                    <i class="bi bi-check-circle"></i> Открыть регистрацию
+                </button>
             </form>
         </div>
 
@@ -186,8 +195,10 @@
                     <h6 class="form-label mb-3">Список команд:</h6>
                     <div id="teamsList"><div class="text-muted small">Команд пока нет</div></div>
                 </div>
+                
                 <div class="col-lg-8 ps-lg-4 border-start" id="participantsArea" style="display: none;">
                     <h5 class="mb-3">Участники: <span id="currentTeamTitle" style="color: var(--primary-color); font-weight: bold;"></span></h5>
+                    
                     <div class="p-3 mb-4 rounded border">
                         <form id="formParticipant" class="row g-2 align-items-end">
                             <div class="col-md-4">
@@ -210,6 +221,7 @@
                             </div>
                         </form>
                     </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead><tr><th>Участник</th><th>Пол</th><th>Ступень</th></tr></thead>
@@ -270,6 +282,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -324,18 +337,9 @@
     let currentSelectedTeamId = null;
     let currentModalParticipantId = null;
 
-    const MOCK_STAGES = [
-        "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)", 
-        "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)",
-        "IV СТУПЕНЬ (возрастная группа от 12 до 13 лет)",
-        "V СТУПЕНЬ (возрастная группа от 14 до 15 лет)"
-    ];
-    const EXERCISES_MAP = {
-        "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)": ["Бег на 30 м (с)", "Прыжок в длину с места толчком двумя ногами (см)", "Плавание 25 м (мин, с)"],
-        "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)": ["Бег на 30 м (с)", "Прыжок в длину с места толчком двумя ногами (см)", "Подтягивани е из виса на высокой перекладине (количество раз)"],
-        "IV СТУПЕНЬ (возрастная группа от 12 до 13 лет)": ["Бег на 60 м (с)", "Подтягивани е из виса на высокой перекладине (количество раз)", "Плавание 50 м (мин, с)"],
-        "V СТУПЕНЬ (возрастная группа от 14 до 15 лет)": ["Бег на 60 м (с)", "Прыжок в длину с места толчком двумя ногами (см)"]
-    };
+    // Списки для динамической загрузки из JSON
+    let MOCK_STAGES = [];
+    let EXERCISES_MAP = {};
 
     window.onload = async function() {
         const badge = document.getElementById('dbStatusBadge');
@@ -343,14 +347,46 @@
             const response = await fetch('gto_database_clean.json');
             gtoData = await response.json();
             badge.innerHTML = `<i class="bi bi-check-circle-fill text-light"></i> База ГТО успешно загружена`;
+
+            // Умный сбор всех ступеней и упражнений из базы данных
+            const stagesSet = new Set();
+            gtoData.forEach(row => {
+                const stage = row['Ступень'];
+                const exercise = row['Упражнение'];
+                
+                if (!stage || !exercise) return;
+
+                stagesSet.add(stage);
+                if (!EXERCISES_MAP[stage]) EXERCISES_MAP[stage] = new Set();
+                EXERCISES_MAP[stage].add(exercise);
+            });
+
+            // Конвертация в массивы для удобной работы
+            MOCK_STAGES = Array.from(stagesSet);
+            // Сортировка ступеней по римским цифрам (приблизительно, для красоты списка)
+            MOCK_STAGES.sort(); 
+
+            for (let stage in EXERCISES_MAP) {
+                EXERCISES_MAP[stage] = Array.from(EXERCISES_MAP[stage]).sort();
+            }
+
         } catch (e) {
             badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning"></i> Работает в демо-режиме (JSON не найден)`;
+            // Фейковые данные для теста интерфейса без сервера
+            MOCK_STAGES = ["II СТУПЕНЬ (возрастная группа от 8 до 9 лет)", "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)"];
+            EXERCISES_MAP = {
+                "II СТУПЕНЬ (возрастная группа от 8 до 9 лет)": ["Бег на 30 м (с)", "Прыжок в длину (см)"],
+                "III СТУПЕНЬ (возрастная группа от 10 до 11 лет)": ["Бег на 60 м (с)", "Подтягивания (раз)"]
+            };
         }
+        
+        // Отрисовываем ступени на вкладке "Настройки"
         renderStages();
     };
 
     function renderStages() {
         const container = document.getElementById('stagesContainer');
+        container.innerHTML = '';
         MOCK_STAGES.forEach((stage, idx) => {
             container.innerHTML += `
                 <div class="col-md-6">
@@ -367,13 +403,15 @@
         const selected = Array.from(document.querySelectorAll('.stage-cb:checked')).map(cb => cb.value);
         let availableEx = new Set();
         selected.forEach(st => (EXERCISES_MAP[st] || []).forEach(ex => availableEx.add(ex)));
+        
         const container = document.getElementById('exercisesContainer');
         container.innerHTML = '';
         if(availableEx.size === 0) {
             container.innerHTML = '<div class="text-muted"><i class="bi bi-info-circle"></i> Сначала выберите ступени...</div>';
             return;
         }
-        availableEx.forEach((ex, idx) => {
+        
+        Array.from(availableEx).sort().forEach((ex, idx) => {
             container.innerHTML += `
                 <div class="col-md-6">
                     <div class="form-check">
@@ -392,7 +430,10 @@
         
         if(appState.festival.stages.length === 0) return showToast("Ошибка: Выберите хотя бы одну ступень!", "error");
 
+        // Открываем остальные вкладки
         ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
+        
+        // Заполняем выпадающие списки
         document.getElementById('partStage').innerHTML = appState.festival.stages.map(s => `<option value="${s}">${s}</option>`).join('');
         
         const rSelect = document.getElementById('ratingExerciseSelect');
@@ -403,7 +444,7 @@
         new bootstrap.Tab(document.getElementById('tab2')).show();
     });
 
-    // --- КОМАНДЫ И УЧАСТНИКИ ---
+    // --- ВКЛАДКА 2: КОМАНДЫ И УЧАСТНИКИ ---
     document.getElementById('formTeam').addEventListener('submit', (e) => {
         e.preventDefault();
         const tName = document.getElementById('teamName').value;
@@ -459,12 +500,14 @@
             return;
         }
         teamParts.forEach(p => {
-            let icon = p.gender === 'Мальчики' ? '<i class="bi bi-gender-male text-primary"></i>' : '<i class="bi bi-gender-female text-danger"></i>';
+            // Обработка слов Мальчики/Мужчины, Девочки/Женщины для правильных иконок
+            const isMale = p.gender.toLowerCase().startsWith('м');
+            let icon = isMale ? '<i class="bi bi-gender-male text-primary"></i>' : '<i class="bi bi-gender-female text-danger"></i>';
             tbody.innerHTML += `<tr><td class="fw-bold">${p.name}</td><td>${icon} ${p.gender}</td><td><span class="text-muted small">${p.stage}</span></td></tr>`;
         });
     }
 
-    // ================= НОВЫЙ ВВОД РЕЗУЛЬТАТОВ (СПИСОК И ПОИСКОВИК) =================
+    // --- ВКЛАДКА 3: ВВОД РЕЗУЛЬТАТОВ (СПИСОК И ПОИСКОВИК) ---
     document.getElementById('tab3').addEventListener('shown.bs.tab', () => renderResultList());
 
     document.getElementById('searchParticipantInput').addEventListener('input', function(e) {
@@ -492,16 +535,16 @@
         filteredParts.forEach(p => {
             const team = appState.teams.find(t => t.id === p.teamId);
             
-            // Считаем сколько упражнений доступно для его ступени на этом фестивале
+            // Считаем сколько упражнений доступно для его ступени
             const stageExs = EXERCISES_MAP[p.stage] || [];
             const validExs = appState.festival.exercises.filter(e => stageExs.includes(e));
-            const totalExs = validExs.length > 0 ? validExs.length : appState.festival.exercises.length; // Fallback
+            const totalExs = validExs.length > 0 ? validExs.length : appState.festival.exercises.length;
             
             // Считаем сколько уже введено
             const enteredCount = appState.results.filter(r => r.partId === p.id).length;
             
-            let statusBadge = enteredCount >= totalExs 
-                ? `<span class="badge bg-success py-2 px-3"><i class="bi bi-check-all"></i> Завершено (${enteredCount}/${totalExs})</span>`
+            let statusBadge = enteredCount >= totalExs && totalExs > 0
+                ? `<span class="badge bg-success py-2 px-3"><i class="bi bi-check-all"></i> Сдано (${enteredCount}/${totalExs})</span>`
                 : (enteredCount > 0 
                     ? `<span class="badge bg-warning text-dark py-2 px-3"><i class="bi bi-hourglass-split"></i> В процессе (${enteredCount}/${totalExs})</span>` 
                     : `<span class="badge bg-secondary py-2 px-3">Нет данных (0/${totalExs})</span>`);
@@ -520,20 +563,18 @@
         });
     }
 
-    // Открытие модального окна для конкретного участника
+    // Открытие модального окна для участника
     function openMassResultModal(pId) {
         currentModalParticipantId = pId;
         const part = appState.participants.find(p => p.id === pId);
         document.getElementById('modalPartName').innerText = part.name;
         
-        // Достаем упражнения, актуальные для ступени участника
         const stageExs = EXERCISES_MAP[part.stage] || [];
         const validExs = appState.festival.exercises.filter(e => stageExs.includes(e));
         const exercisesToShow = validExs.length > 0 ? validExs : appState.festival.exercises;
         
         let html = '';
         exercisesToShow.forEach((ex, idx) => {
-            // Ищем, есть ли уже сохраненный результат
             const existing = appState.results.find(r => r.partId === pId && r.exercise === ex);
             const val = existing ? existing.raw : '';
             
@@ -552,7 +593,7 @@
                         <div class="col-4 col-md-3 border-start">
                             <div class="form-check form-switch pt-1">
                                 <input class="form-check-input modal-res-time" type="checkbox" id="modTime_${idx}" ${checkedAttr}>
-                                <label class="form-check-label small" for="modTime_${idx}">Меньше = Лучше</label>
+                                <label class="form-check-label small" for="modTime_${idx}">Меньше=Лучше</label>
                             </div>
                         </div>
                     </div>
@@ -565,7 +606,7 @@
         modal.show();
     }
 
-    // Сохранение всех результатов из модального окна
+    // Сохранение результатов из модального окна
     function saveMassResults() {
         const pId = currentModalParticipantId;
         const part = appState.participants.find(p => p.id === pId);
@@ -573,20 +614,23 @@
         const times = document.querySelectorAll('.modal-res-time');
         
         let savedCount = 0;
+        const searchGenderPrefix = part.gender.charAt(0).toUpperCase(); // 'М' или 'Ж'
         
         inputs.forEach((input, idx) => {
             const rawVal = parseFloat(input.value);
-            if (isNaN(rawVal)) return; // Если поле пустое, пропускаем
+            if (isNaN(rawVal)) return; // Игнорируем пустые поля
             
             const exercise = input.getAttribute('data-ex');
             const isTime = times[idx].checked;
             
-            // Вычисляем баллы
+            // Расчет баллов
             let points = 1;
             if (gtoData.length > 0) {
-                let norms = gtoData.filter(row => row['Ступень'] === part.stage && row['Упражнение'] === exercise && row['Пол'].includes(part.gender.replace('ки','')));
+                // Ищем норматив по ступени, упражнению и 1 букве пола (М/Ж)
+                let norms = gtoData.filter(row => row['Ступень'] === part.stage && row['Упражнение'] === exercise && row['Пол'].toUpperCase().startsWith(searchGenderPrefix));
                 norms = norms.map(r => ({ p: parseInt(r['Баллы']), v: parseFloat(r['Результат']) })).filter(r => !isNaN(r.v));
                 norms.sort((a, b) => b.p - a.p); 
+                
                 for (let norm of norms) {
                     if (isTime && rawVal <= norm.v) { points = norm.p; break; }
                     if (!isTime && rawVal >= norm.v) { points = norm.p; break; }
@@ -595,10 +639,7 @@
                 points = Math.floor(Math.random() * 50) + 50; 
             }
             
-            // Удаляем старый результат, если он был, чтобы перезаписать
             appState.results = appState.results.filter(r => !(r.partId === pId && r.exercise === exercise));
-            
-            // Записываем новый
             appState.results.push({ partId: pId, exercise: exercise, raw: rawVal, points: points });
             savedCount++;
         });
@@ -606,13 +647,13 @@
         bootstrap.Modal.getInstance(document.getElementById('massResultModal')).hide();
         
         if(savedCount > 0) {
-            showToast(`Успешно сохранено ${savedCount} дисциплин для ${part.name}`, "success");
+            showToast(`Сохранено: ${savedCount} дисциплин для ${part.name}`, "success");
             updateLeaderboards();
-            renderResultList(document.getElementById('searchParticipantInput').value); // Обновляем статусы в списке
+            renderResultList(document.getElementById('searchParticipantInput').value); 
         }
     }
 
-    // ================= РЕЙТИНГ И ЭКСПОРТ =================
+    // --- ВКЛАДКА 4: РЕЙТИНГ И ЭКСПОРТ ---
     document.getElementById('tab4').addEventListener('shown.bs.tab', updateLeaderboards);
 
     function getMedal(index) {
