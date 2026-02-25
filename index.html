@@ -122,11 +122,11 @@
             <form id="formFestival" class="p-4 rounded border" style="background: var(--table-hover);">
                 <div class="row mb-4">
                     <div class="col-md-8 mb-3 mb-md-0">
-                        <label class="form-label">Название фестиваля</label>
+                        <label class="form-label">Название фестиваля <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="festName" placeholder="Например: Весенний кубок по ГТО" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Дата проведения</label>
+                        <label class="form-label">Дата проведения <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="festDate" required>
                     </div>
                 </div>
@@ -164,26 +164,30 @@
                     <div class="p-3 mb-4 rounded border" style="background: var(--table-hover);">
                         <form id="formParticipant" class="row g-2 align-items-end">
                             <div class="col-md-3">
-                                <label class="form-label small mb-1">ФИО</label>
+                                <label class="form-label small mb-1">ФИО <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control form-control-sm" id="partName" placeholder="Иванов И.И." required>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small mb-1">Ожидаемая Ступень</label>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1 text-muted">УИН (необяз.)</label>
+                                <input type="text" class="form-control form-control-sm" id="partUin" placeholder="00-00-0000000">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Ожид. Ступень <span class="text-danger">*</span></label>
                                 <select class="form-select form-select-sm border-primary" id="partStage" required></select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small mb-1">Дата рожд.</label>
+                                <label class="form-label small mb-1">Дата рожд. <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control form-control-sm" id="partDob" required>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small mb-1">Пол</label>
+                                <label class="form-label small mb-1">Пол <span class="text-danger">*</span></label>
                                 <select class="form-select form-select-sm" id="partGender" required>
                                     <option value="Мальчики">Мужской</option>
                                     <option value="Девочки">Женский</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-success btn-sm w-100 py-2 fw-bold" title="Добавить участника"><i class="bi bi-person-plus"></i></button>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-success btn-sm w-100 py-1 fw-bold" title="Добавить участника"><i class="bi bi-person-plus"></i></button>
                             </div>
                         </form>
                     </div>
@@ -311,7 +315,7 @@
     let appState = { 
         festivals: [], 
         teams: [],     
-        participants: [], 
+        participants: [], // [{ id, festivalId, teamId, name, uin, dob, age, gender, stage }]
         results: [],   
         activeFestivalId: null
     };
@@ -349,7 +353,6 @@
                 stagesSet.add(stage);
                 
                 if (!EXERCISES_MAP[stage]) EXERCISES_MAP[stage] = { M: new Set(), F: new Set() };
-                
                 const gKey = getGenderKey(genderRaw);
                 EXERCISES_MAP[stage][gKey].add(exercise);
             });
@@ -397,35 +400,26 @@
         return stageStr.split('(')[0].trim();
     }
 
-    // Эта функция решает проблему поиска "Юношей" по слову "Мальчики"
     function getGenderKey(genderStr) {
         if (!genderStr) return 'M';
         const g = genderStr.toLowerCase();
         if (g === 'm') return 'M';
         if (g === 'f') return 'F';
-        // Если начинается на М (мальчики, мужчины) или Ю (юноши) -> мужской пол
         return (g.startsWith('м') || g.startsWith('ю')) ? 'M' : 'F';
     }
 
-    // Умное определение "Меньше=Лучше" без ошибок
     function isExerciseTimeBased(exName) {
-        // Убираем пробелы, чтобы ловить опечатки типа "Подниман ие" из таблиц
         const solid = exName.toLowerCase().replace(/\s+/g, '');
-        
-        // ИСКЛЮЧЕНИЯ: где Больше = Лучше (даже если есть слово "минута")
         if (solid.includes('подниман') || solid.includes('сгибан') || 
             solid.includes('подтягиван') || solid.includes('прыжок') || 
             solid.includes('наклон') || solid.includes('метан') || 
             solid.includes('стрельба') || solid.includes('рывок')) {
             return false;
         }
-        
-        // В остальном - если есть секунды/минуты - это время
         return solid.includes('(с)') || solid.includes('мин') || 
                solid.includes('бег') || solid.includes('кросс') || solid.includes('плаван');
     }
 
-    // Позволяет вводить 4:50 и превращать это в 290 секунд для расчетов
     function parseGtoValue(val) {
         if (val === null || val === undefined || val === '') return NaN;
         let s = val.toString().trim().replace(',', '.');
@@ -512,7 +506,6 @@
 
         ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
         
-        // Заполняем селектор ступеней
         document.getElementById('partStage').innerHTML = activeFest.stages.map(s => `<option value="${s}">${getShortStageName(s)}</option>`).join('');
         
         let allUniqueExs = new Set();
@@ -605,7 +598,7 @@
         activateFestivalTabs(newFest.id);
     });
 
-    // --- КОМАНДЫ И УЧАСТНИКИ ---
+    // --- КОМАНДЫ ---
     document.getElementById('formTeam').addEventListener('submit', (e) => {
         e.preventDefault();
         const tName = document.getElementById('teamName').value;
@@ -659,12 +652,14 @@
         renderParticipants();
     }
 
+    // --- УЧАСТНИКИ ---
     document.getElementById('formParticipant').addEventListener('submit', (e) => {
         e.preventDefault();
         if(!currentSelectedTeamId || !appState.activeFestivalId) return;
         
         const activeFest = appState.festivals.find(f => f.id === appState.activeFestivalId);
         const name = document.getElementById('partName').value;
+        const uin = document.getElementById('partUin').value.trim();
         const dob = document.getElementById('partDob').value;
         const gender = document.getElementById('partGender').value;
         const selectedStageFull = document.getElementById('partStage').value;
@@ -678,11 +673,12 @@
 
         appState.participants.push({
             id: Date.now(), festivalId: appState.activeFestivalId, teamId: currentSelectedTeamId, 
-            name: name, dob: dob, age: age, gender: gender, stage: selectedStageFull
+            name: name, uin: uin, dob: dob, age: age, gender: gender, stage: selectedStageFull
         });
         saveState();
         
         document.getElementById('partName').value = '';
+        document.getElementById('partUin').value = '';
         document.getElementById('partDob').value = '';
         
         renderParticipants();
@@ -711,8 +707,12 @@
         teamParts.forEach(p => {
             const isMale = getGenderKey(p.gender) === 'M';
             let icon = isMale ? '<i class="bi bi-gender-male text-primary"></i>' : '<i class="bi bi-gender-female text-danger"></i>';
+            const uinHtml = p.uin ? `<div class="text-muted small">УИН: ${p.uin}</div>` : '';
             tbody.innerHTML += `<tr>
-                <td class="fw-bold">${p.name}</td><td>${p.age} лет</td><td>${icon} ${p.gender}</td><td><span class="badge bg-secondary">${getShortStageName(p.stage)}</span></td>
+                <td><div class="fw-bold">${p.name}</div>${uinHtml}</td>
+                <td>${p.age} лет</td>
+                <td>${icon} ${p.gender}</td>
+                <td><span class="badge bg-secondary">${getShortStageName(p.stage)}</span></td>
                 <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteParticipant(${p.id})"><i class="bi bi-trash"></i></button></td>
             </tr>`;
         });
@@ -734,7 +734,7 @@
             const term = searchTerm.toLowerCase();
             filteredParts = filteredParts.filter(p => {
                 const teamName = appState.teams.find(t => t.id === p.teamId)?.name.toLowerCase() || '';
-                return p.name.toLowerCase().includes(term) || teamName.includes(term);
+                return p.name.toLowerCase().includes(term) || teamName.includes(term) || (p.uin && p.uin.includes(term));
             });
         }
         
@@ -769,13 +769,15 @@
                 });
                 resultsSummaryHtml += '</div>';
             }
+
+            const uinBadge = p.uin ? `<span class="badge bg-light text-secondary border ms-2 fw-normal" style="font-size: 0.65em;">УИН: ${p.uin}</span>` : '';
                 
             listContainer.innerHTML += `
             <div class="participant-list-item d-flex justify-content-between align-items-center" onclick="openMassResultModal(${p.id})">
                 <div class="d-flex align-items-start w-100">
                     <div class="me-3 fs-2 mt-1" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
                     <div class="flex-grow-1 pe-3">
-                        <div class="fw-bold fs-5">${p.name} <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em;">${p.age} лет</span></div>
+                        <div class="fw-bold fs-5">${p.name} <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em;">${p.age} лет</span>${uinBadge}</div>
                         <div class="text-muted small mb-1"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${getShortStageName(p.stage)}</div>
                         ${resultsSummaryHtml}
                     </div>
@@ -804,8 +806,6 @@
             validExs.forEach((ex, idx) => {
                 const existing = appState.results.find(r => r.partId === pId && r.exercise === ex);
                 const val = existing ? existing.raw : '';
-                
-                // Используем правильную функцию без багов
                 const isTimeBased = isExerciseTimeBased(ex);
                 const checkedAttr = isTimeBased ? 'checked' : '';
                 
@@ -841,8 +841,6 @@
         const times = document.querySelectorAll('.modal-res-time');
         
         let savedCount = 0;
-        
-        // ВАЖНО: Определяем ключ пола (M или F) для правильного поиска по базе
         const pGKey = getGenderKey(part.gender); 
         
         inputs.forEach((input, idx) => {
@@ -858,7 +856,7 @@
                 let norms = gtoData.filter(row => {
                     return row['Ступень'] === part.stage && 
                            row['Упражнение'] === exercise && 
-                           getGenderKey(row['Пол']) === pGKey; // Сверка пола исправлена!
+                           getGenderKey(row['Пол']) === pGKey; 
                 });
                 norms = norms.map(r => ({ p: parseInt(r['Баллы']), v: parseGtoValue(r['Результат']) })).filter(r => !isNaN(r.v));
                 norms.sort((a, b) => b.p - a.p); 
@@ -928,11 +926,12 @@
             const p = appState.participants.find(part => part.id === r.partId);
             if(!p) return;
             const t = appState.teams.find(team => team.id === p.teamId);
+            const uinHtml = p.uin ? `<div class="text-muted" style="font-size: 0.75em;">УИН: ${p.uin}</div>` : '';
             
             eBody.innerHTML += `
                 <tr>
                     <td>${getMedal(i)}</td>
-                    <td><div class="fw-bold">${p.name}</div><div class="text-muted small">${t ? t.name : ''}</div></td>
+                    <td><div class="fw-bold">${p.name}</div><div class="text-muted small">${t ? t.name : ''}</div>${uinHtml}</td>
                     <td class="text-center fw-bold text-primary fs-5">${r.raw}</td>
                     <td class="text-end"><span class="badge-points bg-success">${r.points}</span></td>
                 </tr>`;
@@ -951,17 +950,17 @@
             const workbook = XLSX.utils.book_new();
 
             let exportDataInd = [
-                ["Команда", "ФИО Участника", "Возраст", "Пол", "Возрастная Ступень", "Упражнение (Дисциплина)", "Фактический результат", "Начислено баллов"]
+                ["Команда", "ФИО Участника", "УИН", "Возраст", "Пол", "Возрастная Ступень", "Упражнение (Дисциплина)", "Фактический результат", "Начислено баллов"]
             ];
             
             activeFestResults.forEach(r => {
                 const p = appState.participants.find(part => part.id === r.partId);
                 const t = appState.teams.find(team => team.id === p.teamId);
-                exportDataInd.push([t ? t.name : 'Без команды', p.name, p.age, p.gender, getShortStageName(p.stage), r.exercise, r.raw, r.points]);
+                exportDataInd.push([t ? t.name : 'Без команды', p.name, p.uin || '-', p.age, p.gender, getShortStageName(p.stage), r.exercise, r.raw, r.points]);
             });
             
             const wsInd = XLSX.utils.aoa_to_sheet(exportDataInd);
-            wsInd['!cols'] = [ {wpx: 150}, {wpx: 200}, {wpx: 60}, {wpx: 80}, {wpx: 150}, {wpx: 250}, {wpx: 120}, {wpx: 120} ];
+            wsInd['!cols'] = [ {wpx: 150}, {wpx: 200}, {wpx: 110}, {wpx: 60}, {wpx: 80}, {wpx: 150}, {wpx: 250}, {wpx: 120}, {wpx: 120} ];
             XLSX.utils.book_append_sheet(workbook, wsInd, "Личный зачет");
 
             let exportDataTeam = [
