@@ -190,7 +190,7 @@
                     
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
-                            <thead><tr><th>Участник</th><th>Возраст</th><th>Пол</th><th>Назначенная Ступень</th><th>Удалить</th></tr></thead>
+                            <thead><tr><th>Участник</th><th>Возраст</th><th>Пол</th><th>Ступень</th><th>Удалить</th></tr></thead>
                             <tbody id="participantsList"></tbody>
                         </table>
                     </div>
@@ -225,7 +225,7 @@
                 </button>
             </div>
             <div class="row g-4">
-                <div class="col-lg-5">
+                <div class="col-lg-6">
                     <div class="p-4 rounded h-100 border">
                         <h5 class="text-center mb-3">🏆 Командный зачет (Превью)</h5>
                         <div class="table-responsive">
@@ -236,20 +236,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-lg-6">
                     <div class="p-4 rounded h-100 border">
                         <h5 class="text-center mb-3">🏅 Личный зачет по видам (Превью)</h5>
                         <select class="form-select mb-4" id="ratingExerciseSelect"></select>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th width="10%">Место</th>
-                                        <th>Участник</th>
-                                        <th class="text-center">Рез-т</th>
-                                        <th width="20%" class="text-end">Баллы</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th width="15%">Место</th><th>Участник</th><th width="25%" class="text-end">Баллы</th></tr></thead>
                                 <tbody id="leaderboardExercise"></tbody>
                             </table>
                         </div>
@@ -291,7 +284,6 @@
         document.getElementById('themeSwitch').value = savedTheme;
     }
 
-    // --- УВЕДОМЛЕНИЯ ---
     function showToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         const id = 'toast-' + Date.now();
@@ -301,7 +293,7 @@
                 <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
         container.insertAdjacentHTML('beforeend', html);
         const toastEl = document.getElementById(id);
-        const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+        const toast = new bootstrap.Toast(toastEl, { delay: 4500 });
         toast.show();
         toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
     }
@@ -378,7 +370,7 @@
         }
     };
 
-    // --- ФУНКЦИИ ВОЗРАСТА И ПОЛА ---
+    // --- ФУНКЦИИ ВОЗРАСТА ---
     function calculateAge(dobStr, festivalDateStr) {
         if (!dobStr || !festivalDateStr) return 0;
         const dob = new Date(dobStr);
@@ -480,7 +472,7 @@
 
         ['tab2', 'tab3', 'tab4'].forEach(id => document.getElementById(id).disabled = false);
         
-        // Заполняем селектор ступеней для добавления участников
+        // Заполняем селектор ступеней для добавления участников именно из ЭТОГО фестиваля
         document.getElementById('partStage').innerHTML = activeFest.stages.map(s => `<option value="${s}">${getShortStageName(s)}</option>`).join('');
         
         // Сбор всех уникальных упражнений фестиваля для общего селектора в рейтинге
@@ -664,20 +656,20 @@
         const dob = document.getElementById('partDob').value;
         const gender = document.getElementById('partGender').value;
         
-        // Берем ступень, которую выбрал судья из селектора (значение Value там - полная строка)
-        const selectedStageFull = document.getElementById('partStage').value;
+        // Берем ступень, которую выбрал судья
+        const selectedStage = document.getElementById('partStage').value;
 
-        // Считаем возраст и проверяем, подходит ли он
+        // Считаем возраст и проверяем, подходит ли он под выбранную ступень
         const age = calculateAge(dob, activeFest.date);
-        const stageRange = getStageAgeRange(selectedStageFull);
+        const stageRange = getStageAgeRange(selectedStage);
 
         if (age < stageRange.min || age > stageRange.max) {
-            return showToast(`ОШИБКА: Возраст участника (${age} лет) на день фестиваля не соответствует выбранной: ${getShortStageName(selectedStageFull)}. Проверьте дату рождения или ступень!`, "error");
+            return showToast(`ОШИБКА: Возраст участника (${age} лет) на день фестиваля не соответствует выбранной: ${getShortStageName(selectedStage)}. Проверьте дату рождения или ступень!`, "error");
         }
 
         appState.participants.push({
             id: Date.now(), festivalId: appState.activeFestivalId, teamId: currentSelectedTeamId, 
-            name: name, dob: dob, age: age, gender: gender, stage: selectedStageFull
+            name: name, dob: dob, age: age, gender: gender, stage: selectedStage
         });
         saveState();
         
@@ -686,7 +678,7 @@
         
         renderParticipants();
         renderResultList(); 
-        showToast(`Участник ${name} зачислен в ${getShortStageName(selectedStageFull)}!`, "success");
+        showToast(`Участник ${name} зачислен в ${getShortStageName(selectedStage)}!`, "success");
     });
 
     function deleteParticipant(pId) {
@@ -717,7 +709,7 @@
         });
     }
 
-    // --- ВВОД РЕЗУЛЬТАТОВ (ОТОБРАЖЕНИЕ ИСХОДНЫХ ДАННЫХ) ---
+    // --- ВВОД РЕЗУЛЬТАТОВ ---
     document.getElementById('tab3').addEventListener('shown.bs.tab', () => renderResultList());
     document.getElementById('searchParticipantInput').addEventListener('input', e => renderResultList(e.target.value));
 
@@ -748,42 +740,24 @@
             
             const validExs = activeFest.exercises[p.stage]?.[gKey] || [];
             const totalExs = validExs.length;
-            
-            // Получаем все результаты этого участника
-            const userResults = appState.results.filter(r => r.partId === p.id);
-            const enteredCount = userResults.length;
+            const enteredCount = appState.results.filter(r => r.partId === p.id).length;
             
             let statusBadge = enteredCount >= totalExs && totalExs > 0
                 ? `<span class="badge bg-success py-2 px-3"><i class="bi bi-check-all"></i> Сдано (${enteredCount}/${totalExs})</span>`
                 : (enteredCount > 0 
                     ? `<span class="badge bg-warning text-dark py-2 px-3"><i class="bi bi-hourglass-split"></i> В процессе (${enteredCount}/${totalExs})</span>` 
                     : `<span class="badge bg-secondary py-2 px-3">Нет данных (0/${totalExs})</span>`);
-            
-            // ФОРМИРУЕМ МИНИ-СПИСОК РЕЗУЛЬТАТОВ ДЛЯ КАРТОЧКИ
-            let resultsSummaryHtml = '';
-            if (enteredCount > 0) {
-                resultsSummaryHtml = '<div class="mt-2 d-flex flex-wrap">';
-                userResults.forEach(r => {
-                    resultsSummaryHtml += `<span class="badge bg-light text-dark border border-secondary me-2 mb-1 fw-normal" style="font-size: 0.85em;">
-                        ${r.exercise}: <strong class="text-primary">${r.raw}</strong> <i class="bi bi-arrow-right-short text-muted"></i> <strong class="text-success">${r.points} б.</strong>
-                    </span>`;
-                });
-                resultsSummaryHtml += '</div>';
-            }
-
+                
             listContainer.innerHTML += `
             <div class="participant-list-item d-flex justify-content-between align-items-center" onclick="openMassResultModal(${p.id})">
-                <div class="d-flex align-items-start w-100">
-                    <div class="me-3 fs-2 mt-1" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
-                    <div class="flex-grow-1 pe-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 fs-3" style="color: var(--primary-color);"><i class="bi bi-person-circle"></i></div>
+                    <div>
                         <div class="fw-bold fs-5">${p.name} <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em;">${p.age} лет</span></div>
-                        <div class="text-muted small mb-1"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${getShortStageName(p.stage)}</div>
-                        ${resultsSummaryHtml}
-                    </div>
-                    <div class="text-end d-flex flex-column justify-content-center h-100">
-                        ${statusBadge}
+                        <small class="text-muted"><i class="bi bi-shield-fill"></i> ${team ? team.name : 'Без команды'} &nbsp;|&nbsp; ${getShortStageName(p.stage)}</small>
                     </div>
                 </div>
+                <div>${statusBadge}</div>
             </div>`;
         });
     }
@@ -814,7 +788,7 @@
                         <label class="form-label fw-bold mb-2 text-primary">${ex}</label>
                         <div class="row align-items-center">
                             <div class="col-8 col-md-9">
-                                <input type="number" step="0.01" class="form-control form-control-lg modal-res-input border-primary fw-bold" data-ex="${ex}" value="${val}" placeholder="Фактический результат...">
+                                <input type="number" step="0.01" class="form-control form-control-lg modal-res-input border-primary" data-ex="${ex}" value="${val}" placeholder="Фактический результат...">
                             </div>
                             <div class="col-4 col-md-3 border-start">
                                 <div class="form-check form-switch pt-1">
@@ -879,7 +853,7 @@
         }
     }
 
-    // --- РЕЙТИНГ И ЭКСПОРТ ---
+    // --- РЕЙТИНГ И ЭКСПОРТ (ДВЕ ВКЛАДКИ) ---
     document.getElementById('tab4').addEventListener('shown.bs.tab', updateLeaderboards);
 
     function getMedal(index) {
@@ -915,24 +889,21 @@
             .filter(r => r.festivalId === appState.activeFestivalId && r.exercise === ex)
             .sort((a, b) => b.points - a.points);
         
-        eBody.innerHTML = exResults.length === 0 ? '<tr><td colspan="4" class="text-center text-muted">Нет данных</td></tr>' : '';
+        eBody.innerHTML = exResults.length === 0 ? '<tr><td colspan="3" class="text-center text-muted">Нет данных</td></tr>' : '';
         exResults.forEach((r, i) => {
             const p = appState.participants.find(part => part.id === r.partId);
             if(!p) return;
             const t = appState.teams.find(team => team.id === p.teamId);
-            
-            // В таблицу добавлен показ исходного результата (r.raw)
             eBody.innerHTML += `
                 <tr>
                     <td>${getMedal(i)}</td>
                     <td><div class="fw-bold">${p.name}</div><div class="text-muted small">${t ? t.name : ''}</div></td>
-                    <td class="text-center fw-bold text-primary fs-5">${r.raw}</td>
                     <td class="text-end"><span class="badge-points bg-success">${r.points}</span></td>
                 </tr>`;
         });
     }
 
-    // ЭКСПОРТ В EXCEL (ДВЕ ВКЛАДКИ)
+    // ЭКСПОРТ В EXCEL
     document.getElementById('btnExportExcel').addEventListener('click', function() {
         const activeFestResults = appState.results.filter(r => r.festivalId === appState.activeFestivalId);
         
